@@ -76,9 +76,9 @@ function mbPaywall(id,name,done){
   say("Ini berkunci. Minta ibu bapa buka ya!");
   var m=document.createElement("div"); m.className="modal";
   m.innerHTML='<div class="box"><div class="big">🔒</div><h2>'+name+'</h2>'+
-    '<p>Buka penuh game ini: <b>RM12</b><br>Atau <b>Bundle 5 game MainBelajar: RM36</b></p>'+
-    (MB_BUY_ALL?'<a class="btn gr" href="'+MB_BUY_ALL+'" target="_blank" style="display:block;text-decoration:none">Beli Bundle RM36</a>':'<div class="btn gr">Beli Bundle RM36</div>')+
-    (MB_BUY_ONE?'<a class="btn alt" href="'+MB_BUY_ONE+'" target="_blank" style="display:block;text-decoration:none;margin-top:8px">Beli game ini RM12</a>':'')+
+    '<p>Buka penuh game ini: <b>RM12</b><br>Atau <b>Bundle 10 game MainBelajar: RM49</b></p>'+
+    '<a class="btn gr" href="../beli/?p=all" style="display:block;text-decoration:none">Beli Bundle RM49</a>'+
+    '<a class="btn alt" href="../beli/?p='+id+'" style="display:block;text-decoration:none;margin-top:8px">Beli game ini RM12</a>'+
     '<p>Dah ada kod?</p><input id="mbcode" placeholder="MASUK KOD" maxlength="24"><button class="btn" id="mbgo">Buka</button> <button class="btn alt" id="mbx">Tutup</button><p id="mbmsg"></p></div>';
   document.body.appendChild(m);
   m.querySelector("#mbx").onclick=function(){ m.remove(); };
