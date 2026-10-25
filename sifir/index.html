@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Jom Sifir</title>
+<style>
+:root{--bg:#eaf7ff;--ink:#2b2350;--a:#ff8a3d;--b:#3db8ff;--g:#4cd964;--r:#ff5c5c;--card:#fff;--y:#ffd23d;--p:#9b6bff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",system-ui,sans-serif}
+#app{max-width:480px;margin:0 auto;min-height:100%;padding:14px 14px 90px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+.title{font-size:28px;font-weight:900;color:var(--p)}
+.stars{background:var(--card);border-radius:20px;padding:6px 14px;font-weight:800;box-shadow:0 3px 0 #0001;white-space:nowrap}
+.vb{background:var(--card);border:0;border-radius:50%;width:44px;height:44px;font-size:22px;box-shadow:0 3px 0 #0002}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tb{border:0;border-radius:20px;padding:12px 4px;text-align:center;box-shadow:0 5px 0 #0003;position:relative;font:inherit;color:#fff}
+.tb:active{transform:translateY(3px);box-shadow:0 2px 0 #0003}
+.tb .tn{font-size:38px;font-weight:900;line-height:1.1}.tb .ts{font-size:13px;opacity:.95;min-height:18px}
+.lock{position:absolute;top:4px;right:6px;font-size:16px}
+.btn{border:0;border-radius:18px;padding:14px 20px;font:inherit;font-weight:900;font-size:18px;color:#fff;background:var(--a);box-shadow:0 4px 0 #0003}
+.btn:active{transform:translateY(2px)}
+.btn.alt{background:var(--b)}.btn.gr{background:var(--g)}.btn.pp{background:var(--p)}.btn.wide{display:block;width:100%;margin-top:10px}
+.bar{height:14px;background:#0001;border-radius:10px;overflow:hidden;margin:8px 0 14px}
+.bar i{display:block;height:100%;width:0;background:var(--g);transition:width .4s linear}
+.q{background:var(--card);border-radius:24px;padding:16px;text-align:center;box-shadow:0 5px 0 #0002;margin-bottom:12px}
+.prompt{font-size:30px;font-weight:900;margin-bottom:6px}
+.vis{font-size:30px;font-weight:800;min-height:20px;color:var(--p)}
+.tip{font-size:19px;font-weight:700;line-height:1.35}
+.demo{font-size:20px;font-weight:700;line-height:1.5;min-height:60px}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.chip{border:0;border-radius:16px;padding:12px 0;font:inherit;font-size:24px;font-weight:900;background:var(--y);color:var(--ink);box-shadow:0 4px 0 #0003}
+.chip:active{transform:translateY(2px)}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:19px;font-weight:700}
+.rw{padding:6px 4px;border-radius:10px}.rw.on{background:var(--y)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.ch{background:var(--y);border:0;border-radius:20px;min-height:90px;font:inherit;font-size:40px;font-weight:900;color:var(--ink);box-shadow:0 5px 0 #0003}
+.ch:active{transform:translateY(3px)}
+.ch.ok{background:var(--g);animation:pop .4s}
+.ch.no{background:var(--r);animation:shake .4s}
+@keyframes pop{50%{transform:scale(1.15)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.hint{background:#fff3c4;border-radius:18px;padding:12px;font-size:19px;font-weight:700;text-align:center;margin-top:8px}
+.fing{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
+.fg{border:0;border-radius:14px;height:64px;font:inherit;font-size:16px;font-weight:900;background:#ffd9b0;color:var(--ink)}
+.fg.fold{background:#444;color:#fff;height:34px;margin-top:30px}
+.center{text-align:center}.big{font-size:64px}.hide{display:none}
+.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
+.box{background:#fff;border-radius:26px;padding:22px;max-width:380px;width:100%;text-align:center}
+.box input{width:100%;font:inherit;font-size:20px;padding:12px;border-radius:14px;border:3px solid #0002;text-align:center;margin:10px 0;text-transform:uppercase}
+.back{background:none;border:0;font:inherit;font-weight:800;font-size:18px;color:var(--ink)}
+.bub{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:92%;background:#fff;border:3px solid var(--p);border-radius:22px;padding:10px 16px;font-size:18px;font-weight:800;box-shadow:0 5px 0 #0002;z-index:8}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script>
+// ====== TETAPAN ======
+var UNLOCK_CODES = ["JOMSIFIR12"];   // kod buka semua sifir (bagi lepas pelanggan bayar)
+var BUY_LINK = "";                   // letak link ToyyibPay/Referly
+var PRICE = "RM12";
+var FREE = [1,2,5,10];               // sifir percuma
+
+function load(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+var stars = load("js_stars",{}), unlocked = load("js_unlocked",false), best = load("js_best",0), voiceOn = load("js_voice",true);
+
+// ====== Bunyi ======
+var AC=null;
+function beep(f,d,type,vol){ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); var o=AC.createOscillator(),g=AC.createGain(); o.type=type||"sine"; o.frequency.value=f; g.gain.value=vol||0.15; o.connect(g); g.connect(AC.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d); o.stop(AC.currentTime+d);}catch(e){} }
+function sndOk(){ beep(660,.12); setTimeout(function(){beep(880,.2)},120); }
+function sndNo(){ beep(200,.25,"square",.08); }
+function sndWin(){ [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){beep(f,.25)},i*140); }); }
+
+// ====== Suara (Cikgu Hoot 🦉) ======
+var VOICE=null;
+function pickVoice(){ try{ var vs=speechSynthesis.getVoices(); VOICE=vs.filter(function(v){return /^ms/i.test(v.lang)})[0]||vs.filter(function(v){return /^id/i.test(v.lang)})[0]||null; }catch(e){} }
+try{ speechSynthesis.onvoiceschanged=pickVoice; pickVoice(); }catch(e){}
+var NW=["sifar","satu","dua","tiga","empat","lima","enam","tujuh","lapan","sembilan"];
+function nw(n){
+  if(n<10) return NW[n]; if(n===10) return "sepuluh"; if(n===11) return "sebelas";
+  if(n<20) return NW[n-10]+" belas";
+  if(n<100) return NW[Math.floor(n/10)]+" puluh"+(n%10?" "+NW[n%10]:"");
+  if(n<200) return "seratus"+(n%100?" "+nw(n%100):"");
+  return String(n);
+}
+function speakable(s){
+  return String(s).replace(/<[^>]*>/g," ")
+    .replace(/\d+/g,function(m){ return " "+nw(+m)+" "; })
+    .replace(/×/g," kali ").replace(/\+/g," tambah ").replace(/−/g," tolak ")
+    .replace(/=/g," sama dengan ").replace(/→/g,", ").replace(/❓/g," berapa ")
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,"");
+}
+var bt=null;
+function bubble(t){ var b=document.getElementById("bub"); if(!b) return; b.textContent="🦉 "+t; b.classList.remove("hide"); clearTimeout(bt); bt=setTimeout(function(){ b.classList.add("hide"); },3000); }
+var spkTimer=null;
+function say(text,cb,o){
+  o=o||{}; bubble(String(text).replace(/<[^>]*>/g," ").replace(/\s+/g," "));
+  var done=false; function fin(){ if(done) return; done=true; clearTimeout(spkTimer); if(cb) cb(); }
+  if(!voiceOn || !window.speechSynthesis){ clearTimeout(spkTimer); spkTimer=setTimeout(fin,o.gap||1100); return; }
+  try{
+    speechSynthesis.cancel();
+    var t=speakable(text), u=new SpeechSynthesisUtterance(t);
+    u.lang=VOICE?VOICE.lang:"ms-MY"; if(VOICE) u.voice=VOICE;
+    u.rate=o.rate||0.9; u.pitch=o.pitch||1.35; u.volume=1;
+    u.onend=fin; u.onerror=fin;
+    speechSynthesis.speak(u);
+    clearTimeout(spkTimer); spkTimer=setTimeout(fin,2500+t.length*110);
+  }catch(e){ fin(); }
+}
+function toggleVoice(){ voiceOn=!voiceOn; save("js_voice",voiceOn); try{ speechSynthesis.cancel(); }catch(e){} var v=document.getElementById("vb"); if(v) v.textContent=voiceOn?"🔊":"🔇"; if(voiceOn) say("Hai kawan! Jom belajar sifir!"); }
+var OKS=["Pandai!","Hebat!","Bagus!","Betul! Power!","Wah, cerdik!","Terbaik!","Yeay! Betul!"];
+var NOS=["Cuba lagi ya!","Hampir betul!","Jangan putus asa!","Tak apa, cuba lagi!"];
+
+// ====== Alat ======
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(a){ return a[rnd(0,a.length-1)]; }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=rnd(0,i),t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function tableUnlocked(t){ return unlocked || FREE.indexOf(t)>=0; }
+function totalStars(){ var s=0; for(var k in stars) s+=stars[k]; return s; }
+function rep(e,n){ var s=""; for(var i=0;i<n;i++) s+=e; return s; }
+
+// ====== Formula mudah ingat ======
+var TIP=[null,
+"Sifir 1: Apa pun darab 1, jawapan SAMA! 🟰",
+"Sifir 2: GANDA! Nombor tambah dirinya sendiri. 👯",
+"Sifir 3: Ganda dulu, lepas tu tambah sekali lagi. (2 kali + 1 kali)",
+"Sifir 4: Ganda, ganda lagi! 👯👯",
+"Sifir 5: Hujung mesti 0 atau 5. Atau separuh daripada sifir 10! ✋",
+"Sifir 6: Sifir 5 tambah satu lagi! Nombor genap darab 6, hujung sama: 6×4=24, 6×8=48.",
+"Sifir 7: Sifir 5 tambah sifir 2. Hafal ni: 5-6-7-8, iaitu 56 = 7×8 ✨",
+"Sifir 8: Ganda tiga kali! Hafal: 8×8 = 64.",
+"Sifir 9: Sifir 10 tolak satu nombor. Jumlah dua digit sentiasa 9! Cuba Jari Ajaib di bawah 🖐️",
+"Sifir 10: Letak 0 di belakang. Senang! 🔟",
+"Sifir 11: Dari 1 hingga 9, ulang digit (11×4=44). Lepas tu 110, 121, 132.",
+"Sifir 12: Sifir 10 tambah sifir 2. 🎯"];
+function demo(t,n){
+  var p=t*n;
+  switch(t){
+    case 1: return n+" darab 1 = "+p+" (sama saja!)";
+    case 2: return n+" + "+n+" = "+p;
+    case 3: return "Ganda "+n+" = "+(2*n)+", tambah "+n+" lagi = "+p;
+    case 4: return "Ganda "+n+" = "+(2*n)+", ganda lagi = "+p;
+    case 5: return "10 × "+n+" = "+(10*n)+", separuh = "+p;
+    case 6: return "5 × "+n+" = "+(5*n)+", tambah "+n+" = "+p;
+    case 7: return "5 × "+n+" = "+(5*n)+" dan 2 × "+n+" = "+(2*n)+", jumlah = "+p;
+    case 8: return "Ganda "+n+" = "+(2*n)+", ganda = "+(4*n)+", ganda = "+p;
+    case 9: return "10 × "+n+" = "+(10*n)+", tolak "+n+" = "+p;
+    case 10: return n+" letak 0 di belakang = "+p;
+    case 11: return "10 × "+n+" = "+(10*n)+", tambah "+n+" = "+p;
+    default: return "10 × "+n+" = "+(10*n)+" dan 2 × "+n+" = "+(2*n)+", jumlah = "+p;
+  }
+}
+
+// ====== Soalan ======
+function nearby(ans,t){
+  var c=shuffle([ans+t,ans-t,ans+1,ans-1,ans+10,ans-10,ans+2,ans-2,ans+t+1,ans-t-1].filter(function(x){return x>0&&x!==ans;}));
+  var out=[],i=0; while(out.length<3&&i<c.length){ if(out.indexOf(c[i])<0) out.push(c[i]); i++; }
+  var k=1; while(out.length<3){ if(out.indexOf(ans+k+20)<0) out.push(ans+k+20); k++; }
+  return out;
+}
+function mk4(ans,t){ var set=shuffle([ans].concat(nearby(ans,t))); return {ch:set.map(String),ans:set.indexOf(ans)}; }
+function qMul(t){
+  var n=rnd(1,12), r=mk4(t*n,t);
+  return {prompt:t+" × "+n+" = ?", vis:"", say:t+" × "+n+", sama dengan berapa?", ch:r.ch, ans:r.ans, t:t, n:n, hint:demo(t,n)};
+}
+function qGap(t){
+  var s=rnd(1,8), seq=[], i; for(i=0;i<5;i++) seq.push(t*(s+i));
+  var gi=rnd(0,4), a=seq[gi], r=mk4(a,t);
+  var vis=seq.map(function(x,j){ return j===gi?"❓":x; }).join(" → ");
+  var sy=seq.map(function(x,j){ return j===gi?"berapa":x; }).join(", ");
+  return {prompt:"Sambung sifir "+t, vis:vis, say:"Sambung sifir "+t+". "+sy, ch:r.ch, ans:r.ans, t:t, n:s+gi, hint:"Nombor ni ialah "+t+" × "+(s+gi)+". "+demo(t,s+gi)};
+}
+
+// ====== Skrin ======
+var app=document.getElementById("app");
+function shell(){ app.innerHTML='<div id="hd"></div><div id="qa"></div>'; }
+function hd(back,right,pct){
+  document.getElementById("hd").innerHTML='<div class="top"><button class="back" id="bk">← Balik</button><div class="stars" id="rt">'+right+'</div></div><div class="bar"><i id="bf" style="width:'+pct+'%"></i></div>';
+  document.getElementById("bk").onclick=back;
+}
+function hue(t){ return "hsl("+((t*29+200)%360)+",70%,55%)"; }
+function stopAll(){ CH.on=false; CH.id++; if(T){ T.over=true; clearInterval(T.iv); } }
+
+function home(){
+  stopAll(); try{ speechSynthesis.cancel(); }catch(e){}
+  var h='<div class="top"><div class="title">Jom Sifir ✖️</div><div class="stars">⭐ '+totalStars()+'</div><button class="vb" id="vb">'+(voiceOn?"🔊":"🔇")+'</button></div><div class="grid">';
+  for(var t=1;t<=12;t++){
+    var lk=!tableUnlocked(t);
+    h+='<button class="tb" data-t="'+t+'" style="background:'+hue(t)+'">'+(lk?'<span class="lock">🔒</span>':'')+'<div class="tn">'+t+'</div><div class="ts">'+(stars[t]?rep("⭐",stars[t]):"Sifir")+'</div></button>';
+  }
+  h+='</div><button class="btn pp wide" id="timed">⏱️ Lawan Masa 60 Saat'+(best?" (Terbaik: "+best+")":"")+'</button>';
+  if(!unlocked) h+='<button class="btn alt wide" id="buy">🔓 Buka Semua Sifir – '+PRICE+'</button>';
+  app.innerHTML=h;
+  document.getElementById("vb").onclick=toggleVoice;
+  Array.prototype.forEach.call(app.querySelectorAll(".tb"),function(b){
+    b.onclick=function(){ var t=+b.getAttribute("data-t"); if(!tableUnlocked(t)) return paywall(); say("Sifir "+t); tmenu(t); };
+  });
+  document.getElementById("timed").onclick=timedStart;
+  var bb=document.getElementById("buy"); if(bb) bb.onclick=paywall;
+}
+
+function paywall(){
+  say("Sifir ini berkunci. Minta ibu bapa buka ya!");
+  var m=document.createElement("div"); m.className="modal";
+  m.innerHTML='<div class="box"><div class="big">🔒</div><h2>Buka Semua Sifir</h2><p>Sifir 3, 4, 6, 7, 8, 9, 11, 12. Bayar sekali sahaja, tiada iklan.</p>'+
+    (BUY_LINK?'<a class="btn gr" href="'+BUY_LINK+'" target="_blank" style="display:block;text-decoration:none">Beli '+PRICE+'</a>':'<div class="btn gr">Beli '+PRICE+'</div>')+
+    '<p>Dah ada kod?</p><input id="code" placeholder="MASUK KOD" maxlength="20"><button class="btn" id="go">Buka</button> <button class="btn alt" id="x">Tutup</button><p id="msg"></p></div>';
+  document.body.appendChild(m);
+  m.querySelector("#x").onclick=function(){ m.remove(); };
+  m.querySelector("#go").onclick=function(){
+    var v=m.querySelector("#code").value.trim().toUpperCase();
+    if(UNLOCK_CODES.indexOf(v)>=0){ unlocked=true; save("js_unlocked",true); sndWin(); m.remove(); say("Yeay! Semua sifir dah terbuka!"); home(); }
+    else { sndNo(); m.querySelector("#msg").textContent="Kod salah, cuba lagi."; }
+  };
+}
+
+function tmenu(t){
+  stopAll();
+  app.innerHTML='<div class="top"><button class="back" id="bk">← Balik</button><div class="stars">Sifir '+t+' '+rep("⭐",stars[t]||0)+'</div></div>'+
+    '<div class="q"><div class="prompt" style="font-size:80px;color:'+hue(t)+'">'+t+'</div><div class="tip">'+TIP[t]+'</div></div>'+
+    '<button class="btn gr wide" id="m1">📖 Belajar Formula + Nyanyi</button>'+
+    '<button class="btn wide" id="m2">🎯 Kuiz 10 Soalan</button>'+
+    '<button class="btn alt wide" id="m3">🧩 Isi Tempat Kosong</button>';
+  document.getElementById("bk").onclick=home;
+  document.getElementById("m1").onclick=function(){ learn(t); };
+  document.getElementById("m2").onclick=function(){ startQuiz(t,"mul"); };
+  document.getElementById("m3").onclick=function(){ startQuiz(t,"gap"); };
+}
+
+// ====== Belajar + Nyanyi ======
+var CH={on:false,id:0}, T=null;
+function singBtn(on,t){ var b=document.getElementById("sing"); if(b) b.textContent=on?"⏹️ Berhenti":"🎵 Nyanyi Sifir "+t; }
+function hiRow(n){ Array.prototype.forEach.call(document.querySelectorAll(".rw"),function(r){ r.classList.remove("on"); }); var r=document.getElementById("r"+n); if(r) r.classList.add("on"); }
+function chant(t){
+  if(CH.on){ CH.on=false; CH.id++; try{ speechSynthesis.cancel(); }catch(e){} singBtn(false,t); return; }
+  CH.on=true; var id=++CH.id, n=1; singBtn(true,t);
+  (function step(){
+    if(!CH.on||CH.id!==id) return;
+    if(n>12){ CH.on=false; singBtn(false,t); hiRow(0); sndWin(); say("Pandai! Habis dah sifir "+t+"!"); return; }
+    hiRow(n);
+    say(t+" × "+n+" = "+(t*n),function(){ n++; setTimeout(step,200); },{rate:0.85});
+  })();
+}
+function learn(t){
+  stopAll();
+  var h='<div class="top"><button class="back" id="bk">← Balik</button><div class="stars">Sifir '+t+'</div></div>'+
+    '<div class="q"><div class="tip">'+TIP[t]+'</div><p><button class="btn gr" id="sing">🎵 Nyanyi Sifir '+t+'</button></p></div><div class="chips">';
+  for(var n=1;n<=12;n++) h+='<button class="chip" data-n="'+n+'">'+n+'</button>';
+  h+='</div><div class="q demo" id="demo">Tekan nombor 👆 untuk dengar formula</div>';
+  if(t===9){
+    h+='<div class="q"><div class="prompt" style="font-size:24px">🖐️ Jari Ajaib Sifir 9</div><div class="fing" id="fing">';
+    for(var k=1;k<=10;k++) h+='<button class="fg" data-k="'+k+'">'+k+'</button>';
+    h+='</div><div class="demo" id="fres">Lipat satu jari. Jari kiri = puluh, jari kanan = sa.</div></div>';
+  }
+  h+='<div class="q"><div class="rows">';
+  for(var j=1;j<=12;j++) h+='<div class="rw" id="r'+j+'">'+t+' × '+j+' = <b>'+(t*j)+'</b></div>';
+  h+='</div></div>';
+  app.innerHTML=h;
+  document.getElementById("bk").onclick=function(){ stopAll(); try{speechSynthesis.cancel();}catch(e){} tmenu(t); };
+  document.getElementById("sing").onclick=function(){ chant(t); };
+  Array.prototype.forEach.call(app.querySelectorAll(".chip"),function(b){
+    b.onclick=function(){
+      CH.on=false; CH.id++; singBtn(false,t);
+      var n=+b.getAttribute("data-n"), p=t*n;
+      hiRow(n);
+      document.getElementById("demo").innerHTML='<b>'+t+' × '+n+' = '+p+'</b><br>'+demo(t,n);
+      say(t+" × "+n+" = "+p+". "+demo(t,n));
+    };
+  });
+  Array.prototype.forEach.call(app.querySelectorAll(".fg"),function(b){
+    b.onclick=function(){
+      var k=+b.getAttribute("data-k"), tens=k-1, units=10-k;
+      Array.prototype.forEach.call(app.querySelectorAll(".fg"),function(x){ x.classList.remove("fold"); });
+      b.classList.add("fold"); hiRow(k);
+      document.getElementById("fres").innerHTML='Lipat jari ke-'+k+'<br>Kiri: <b>'+tens+'</b> jari. Kanan: <b>'+units+'</b> jari.<br>9 × '+k+' = <b>'+(9*k)+'</b>';
+      say("Lipat jari ke "+k+". Kiri "+tens+" jari, kanan "+units+" jari. 9 × "+k+" = "+(9*k));
+    };
+  });
+  say("Jom belajar formula sifir "+t+"!");
+}
+
+// ====== Paparan soalan ======
+function showQ(q,o,onCorrect){
+  var h='<div class="q"><div class="prompt" id="pr">'+q.prompt+' 🔊</div><div class="vis">'+(q.vis||"")+'</div></div><div class="choices">';
+  q.ch.forEach(function(c,i){ h+='<button class="ch" data-i="'+i+'">'+c+'</button>'; });
+  h+='</div>';
+  if(!o.nohint) h+='<p class="center"><button class="btn alt" id="hint">💡 Tolong saya</button></p><div class="hint hide" id="hb"></div>';
+  document.getElementById("qa").innerHTML=h;
+  document.getElementById("pr").onclick=function(){ say(q.say); };
+  if(!o.noAuto) setTimeout(function(){ say(q.say); },200);
+  var done=false, tried=false, hb=document.getElementById("hint");
+  if(hb) hb.onclick=function(){ tried=true; var b=document.getElementById("hb"); b.classList.remove("hide"); b.innerHTML=q.hint; say(q.hint); };
+  Array.prototype.forEach.call(document.querySelectorAll(".ch"),function(b){
+    b.onclick=function(){
+      if(done) return;
+      var i=+b.getAttribute("data-i");
+      if(i===q.ans){ done=true; b.classList.add("ok"); sndOk(); onCorrect(!tried,q); }
+      else { tried=true; b.classList.add("no"); sndNo(); setTimeout(function(){ b.classList.remove("no"); },450); if(o.onWrong) o.onWrong(); else say(pick(NOS)); }
+    };
+  });
+}
+
+// ====== Kuiz ======
+var S=null;
+function startQuiz(t,mode){ S={t:t,mode:mode,i:0,score:0}; qNext(); }
+function qNext(){
+  if(S.i>=10) return qFinish();
+  shell(); hd(function(){ try{speechSynthesis.cancel();}catch(e){} tmenu(S.t); },(S.i+1)+" / 10",S.i/10*100);
+  var q=(S.mode==="gap"?qGap:qMul)(S.t);
+  showQ(q,{},function(first,qq){
+    if(first) S.score++; S.i++;
+    say(pick(OKS)+" "+qq.t+" × "+qq.n+" = "+(qq.t*qq.n),null,{});
+    setTimeout(qNext,2300);
+  });
+}
+function qFinish(){
+  var n=S.score>=9?3:S.score>=6?2:1;
+  if(!stars[S.t]||stars[S.t]<n){ stars[S.t]=n; save("js_stars",stars); }
+  sndWin();
+  var msg=n===3?"Hebat! Kamu raja sifir!":n===2?"Bagus! Sikit lagi!":"Jom cuba lagi ya!";
+  setTimeout(function(){ say(msg+" Betul "+S.score+" daripada 10."); },500);
+  app.innerHTML='<div class="center" style="padding-top:30px"><div class="big">'+rep("⭐",n)+'</div><h1>'+msg+'</h1><p style="font-size:22px">Betul '+S.score+' / 10 (kali pertama)</p>'+
+    '<button class="btn gr wide" id="again">🔁 Main Lagi</button><button class="btn alt wide" id="lr">📖 Belajar Formula</button><button class="btn wide" id="hm">🏠 Menu</button></div>';
+  document.getElementById("again").onclick=function(){ startQuiz(S.t,S.mode); };
+  document.getElementById("lr").onclick=function(){ learn(S.t); };
+  document.getElementById("hm").onclick=home;
+}
+
+// ====== Lawan Masa ======
+function updT(){ var r=document.getElementById("rt"), b=document.getElementById("bf"); if(r) r.textContent="⏱ "+T.left+"s  ⭐ "+T.score+(T.combo>1?"  🔥"+T.combo:""); if(b) b.style.width=(T.left/60*100)+"%"; }
+function timedStart(){
+  stopAll();
+  var pool=[]; for(var t=1;t<=12;t++) if(tableUnlocked(t)) pool.push(t);
+  T={left:60,score:0,combo:0,maxc:0,over:false,iv:null,pool:pool};
+  shell(); hd(function(){ T.over=true; clearInterval(T.iv); try{speechSynthesis.cancel();}catch(e){} home(); },"",100); updT();
+  document.getElementById("qa").innerHTML='<div class="center big" style="padding-top:40px">🎬</div>';
+  var mine=T;
+  say("Sedia... mula!",function(){
+    if(mine.over) return;
+    mine.iv=setInterval(function(){
+      mine.left--; updT();
+      if(mine.left<=5&&mine.left>0) beep(880,.08);
+      if(mine.left===10) say("Sepuluh saat lagi!");
+      if(mine.left<=0) timedEnd(mine);
+    },1000);
+    nextT(mine);
+  },{gap:1300});
+}
+function nextT(m){
+  if(m.over) return;
+  var q=qMul(pick(m.pool));
+  showQ(q,{nohint:true,noAuto:true,onWrong:function(){ m.combo=0; updT(); }},function(first){
+    m.score++; m.combo++; if(m.combo>m.maxc) m.maxc=m.combo; updT();
+    if(m.combo===3||m.combo===5||m.combo===10||m.combo===15) say("Combo "+m.combo+"! Hebat!",null,{rate:1.05});
+    else say(pick(OKS),null,{rate:1.1});
+    setTimeout(function(){ nextT(m); },450);
+  });
+}
+function timedEnd(m){
+  m.over=true; clearInterval(m.iv);
+  var hi=m.score>best; if(hi){ best=m.score; save("js_best",best); }
+  sndWin();
+  setTimeout(function(){ say(hi?"Wah! Rekod baharu! "+m.score+" soalan betul!":"Tamat masa! "+m.score+" soalan betul!"); },400);
+  app.innerHTML='<div class="center" style="padding-top:30px"><div class="big">'+(hi?"🏆":"⏱️")+'</div><h1>'+(hi?"Rekod Baharu!":"Tamat Masa!")+'</h1><p style="font-size:24px">Betul: <b>'+m.score+'</b><br>Combo terbaik: 🔥 '+m.maxc+'<br>Skor tertinggi: ⭐ '+best+'</p>'+
+    '<button class="btn gr wide" id="again">🔁 Main Lagi</button><button class="btn wide" id="hm">🏠 Menu</button></div>';
+  document.getElementById("again").onclick=timedStart;
+  document.getElementById("hm").onclick=home;
+}
+
+home();
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Jom Kira</title>
+<style>
+:root{--bg:#fff7e0;--ink:#3b2a14;--a:#ff8a3d;--b:#3db8ff;--g:#4cd964;--r:#ff5c5c;--card:#fff;--y:#ffd23d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",system-ui,sans-serif}
+#app{max-width:480px;margin:0 auto;min-height:100%;padding:14px 14px 28px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.title{font-size:28px;font-weight:900;color:var(--a)}
+.stars{background:var(--card);border-radius:20px;padding:6px 14px;font-weight:800;box-shadow:0 3px 0 #0001}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lv{background:var(--card);border-radius:22px;padding:18px 8px;text-align:center;box-shadow:0 5px 0 #0002;position:relative;border:0;font:inherit;color:inherit}
+.lv:active{transform:translateY(3px);box-shadow:0 2px 0 #0002}
+.lv .ic{font-size:46px}.lv .nm{font-weight:800;margin-top:4px}.lv .st{font-size:20px;margin-top:4px;min-height:26px}
+.lock{position:absolute;top:8px;right:10px;font-size:20px}
+.btn{border:0;border-radius:18px;padding:14px 20px;font:inherit;font-weight:900;font-size:18px;color:#fff;background:var(--a);box-shadow:0 4px 0 #0003}
+.btn:active{transform:translateY(2px)}
+.btn.alt{background:var(--b)}.btn.gr{background:var(--g)}
+.bar{height:14px;background:#0001;border-radius:10px;overflow:hidden;margin:8px 0 14px}
+.bar i{display:block;height:100%;width:0;background:var(--g);transition:width .3s}
+.q{background:var(--card);border-radius:24px;padding:18px;text-align:center;box-shadow:0 5px 0 #0002}
+.prompt{font-size:26px;font-weight:900;margin-bottom:8px}
+.vis{font-size:40px;line-height:1.25;min-height:70px;word-break:break-all}
+.vis.big{font-size:80px;font-weight:900;color:var(--a)}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.choices.two{grid-template-columns:1fr 1fr}
+.ch{background:var(--y);border:0;border-radius:20px;min-height:96px;font:inherit;font-size:44px;font-weight:900;color:var(--ink);box-shadow:0 5px 0 #0003;padding:6px}
+.ch.small{font-size:26px;line-height:1.2}
+.ch:active{transform:translateY(3px)}
+.ch.ok{background:var(--g);animation:pop .4s}
+.ch.no{background:var(--r);animation:shake .4s}
+@keyframes pop{50%{transform:scale(1.15)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.center{text-align:center}
+.big{font-size:64px}
+.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
+.box{background:#fff;border-radius:26px;padding:22px;max-width:380px;width:100%;text-align:center}
+.box input{width:100%;font:inherit;font-size:20px;padding:12px;border-radius:14px;border:3px solid #0002;text-align:center;margin:10px 0;text-transform:uppercase}
+.back{background:none;border:0;font:inherit;font-weight:800;font-size:18px;color:var(--ink)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ====== TETAPAN (ubah di sini) ======
+var UNLOCK_CODES = ["JOMKIRA12"];          // kod buka semua level (bagi lepas pelanggan bayar)
+var BUY_LINK = "";                         // letak link ToyyibPay/Referly di sini
+var PRICE = "RM12";
+var TOTAL_Q = 10;
+
+// ====== Storan ======
+function load(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+var stars = load("jk_stars", {});     // {levelId: 1..3}
+var unlocked = load("jk_unlocked", false);
+
+// ====== Bunyi ======
+var AC = null;
+function beep(freq, dur, type, vol){
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.value = vol || 0.15; o.connect(g); g.connect(AC.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur); o.stop(AC.currentTime + dur);
+  }catch(e){}
+}
+function sndOk(){ beep(660,.12); setTimeout(function(){beep(880,.2)},120); }
+function sndNo(){ beep(200,.25,"square",.08); }
+function sndWin(){ [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){beep(f,.25)}, i*140); }); }
+function say(t){
+  try{
+    if(!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(t); u.lang = "ms-MY"; u.rate = 0.85; u.pitch = 1.2;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+// ====== Alat ======
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(a){ return a[rnd(0,a.length-1)]; }
+function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j=rnd(0,i), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var OBJ = ["🍎","🐟","⭐","🐥","🎈","🚗","🍌","🐱","🍓","🌸"];
+var WORD = ["sifar","satu","dua","tiga","empat","lima","enam","tujuh","lapan","sembilan","sepuluh","sebelas","dua belas"];
+function rep(e,n){ var s=""; for(var i=0;i<n;i++) s+=e; return s; }
+function numChoices(ans, min, max){
+  var set = [ans], guard = 0;
+  while(set.length < 3 && guard++ < 50){
+    var c = ans + rnd(-3,3);
+    if(c>=min && c<=max && set.indexOf(c)<0) set.push(c);
+  }
+  while(set.length < 3){ var x = rnd(min,max); if(set.indexOf(x)<0) set.push(x); }
+  set = shuffle(set);
+  return { choices: set.map(function(n){ return {html:String(n)}; }), answer: set.indexOf(ans) };
+}
+function shapeSVG(s, c){
+  var p = {
+    bulat: '<circle cx="50" cy="50" r="40" fill="'+c+'"/>',
+    "segi empat": '<rect x="12" y="12" width="76" height="76" rx="6" fill="'+c+'"/>',
+    "segi tiga": '<polygon points="50,10 92,88 8,88" fill="'+c+'"/>',
+    bintang: '<polygon points="50,6 61,38 95,38 67,58 78,92 50,71 22,92 33,58 5,38 39,38" fill="'+c+'"/>',
+    hati: '<path d="M50 88 C10 56 6 28 26 18 C38 12 48 20 50 30 C52 20 62 12 74 18 C94 28 90 56 50 88Z" fill="'+c+'"/>'
+  }[s];
+  return '<svg viewBox="0 0 100 100" width="64" height="64">'+p+'</svg>';
+}
+
+// ====== Penjana soalan ======
+function genNum(){
+  var n = rnd(1,10), r = numChoices(n,1,10);
+  return { prompt:"Mana nombor "+WORD[n]+"?", vis:"🔊", big:true, say:"Mana nombor "+WORD[n], ch:r.choices, ans:r.answer, speakVis:WORD[n] };
+}
+function genCount(){
+  var n = rnd(1,10), e = pick(OBJ), r = numChoices(n,1,10);
+  return { prompt:"Ada berapa?", vis:rep(e,n), say:"Ada berapa?", ch:r.choices, ans:r.answer, speakVis:null };
+}
+function genCompare(){
+  var a = rnd(1,9), b = rnd(1,9); while(b===a) b = rnd(1,9);
+  var e1 = pick(OBJ), e2 = pick(OBJ);
+  var arr = [{n:a,e:e1},{n:b,e:e2}];
+  return { prompt:"Mana lebih banyak?", vis:"👆", say:"Mana lebih banyak?", two:true, small:true,
+    ch: arr.map(function(x){ return {html:rep(x.e,x.n)}; }), ans: a>b?0:1 };
+}
+function genAdd(){
+  var a = rnd(1,5), b = rnd(1,5), e = pick(OBJ), r = numChoices(a+b,2,10);
+  return { prompt:a+" + "+b+" = ?", vis:rep(e,a)+" ➕ "+rep(e,b), say:WORD[a]+" tambah "+WORD[b]+" sama dengan berapa?", ch:r.choices, ans:r.answer };
+}
+function genSub(){
+  var a = rnd(2,9), b = rnd(1,a-1), e = pick(OBJ), r = numChoices(a-b,0,9);
+  return { prompt:a+" − "+b+" = ?", vis:rep(e,a)+"<br>❌ "+b, say:WORD[a]+" tolak "+WORD[b]+" sama dengan berapa?", ch:r.choices, ans:r.answer };
+}
+function genShape(){
+  var names = ["bulat","segi empat","segi tiga","bintang","hati"];
+  var cols = ["#ff5c5c","#3db8ff","#4cd964","#ff8a3d","#b366ff"];
+  var t = pick(names), set = [t];
+  while(set.length<3){ var x = pick(names); if(set.indexOf(x)<0) set.push(x); }
+  set = shuffle(set);
+  return { prompt:"Mana "+t+"?", vis:"🔷", say:"Mana "+t+"?", ch:set.map(function(s){ return {html:shapeSVG(s,pick(cols))}; }), ans:set.indexOf(t) };
+}
+
+var LEVELS = [
+  {id:1,name:"Kenal Nombor",ic:"🔢",free:true, gen:genNum},
+  {id:2,name:"Kira Gambar",ic:"🍎",free:true, gen:genCount},
+  {id:3,name:"Lebih Banyak",ic:"⚖️",free:true, gen:genCompare},
+  {id:4,name:"Tambah",ic:"➕",free:false,gen:genAdd},
+  {id:5,name:"Tolak",ic:"➖",free:false,gen:genSub},
+  {id:6,name:"Bentuk",ic:"🔺",free:false,gen:genShape}
+];
+
+// ====== Skrin ======
+var app = document.getElementById("app");
+function totalStars(){ var t=0; for(var k in stars) t+=stars[k]; return t; }
+function starStr(n){ return n? rep("⭐",n) : ""; }
+
+function home(){
+  var h = '<div class="top"><div class="title">Jom Kira 🧮</div><div class="stars">⭐ '+totalStars()+'</div></div><div class="grid">';
+  LEVELS.forEach(function(L){
+    var locked = !L.free && !unlocked;
+    h += '<button class="lv" data-id="'+L.id+'">'+(locked?'<span class="lock">🔒</span>':'')+
+         '<div class="ic">'+L.ic+'</div><div class="nm">'+L.name+'</div><div class="st">'+starStr(stars[L.id])+'</div></button>';
+  });
+  h += '</div>';
+  if(!unlocked) h += '<p class="center"><button class="btn alt" id="buy">🔓 Buka Semua Level – '+PRICE+'</button></p>';
+  app.innerHTML = h;
+  Array.prototype.forEach.call(app.querySelectorAll(".lv"), function(b){
+    b.onclick = function(){
+      var L = LEVELS[+b.getAttribute("data-id")-1];
+      if(!L.free && !unlocked) return paywall();
+      start(L);
+    };
+  });
+  var bb = document.getElementById("buy"); if(bb) bb.onclick = paywall;
+}
+
+function paywall(){
+  var m = document.createElement("div"); m.className = "modal";
+  m.innerHTML = '<div class="box"><div class="big">🔒</div><h2>Buka Semua Level</h2>'+
+    '<p>Tambah, Tolak, Bentuk dan level baharu. Bayar sekali sahaja, tiada iklan.</p>'+
+    (BUY_LINK ? '<a class="btn gr" href="'+BUY_LINK+'" target="_blank" style="display:block;text-decoration:none">Beli '+PRICE+'</a>' : '<div class="btn gr">Beli '+PRICE+'</div>')+
+    '<p>Dah ada kod?</p><input id="code" placeholder="MASUK KOD" maxlength="20">'+
+    '<button class="btn" id="go">Buka</button> <button class="btn alt" id="x">Tutup</button><p id="msg"></p></div>';
+  document.body.appendChild(m);
+  m.querySelector("#x").onclick = function(){ m.remove(); };
+  m.querySelector("#go").onclick = function(){
+    var v = m.querySelector("#code").value.trim().toUpperCase();
+    if(UNLOCK_CODES.indexOf(v) >= 0){ unlocked = true; save("jk_unlocked", true); sndWin(); m.remove(); home(); }
+    else { sndNo(); m.querySelector("#msg").textContent = "Kod salah, cuba lagi."; }
+  };
+}
+
+var S = null;
+function start(L){ S = {L:L, i:0, score:0, tried:false}; question(); }
+
+function question(){
+  if(S.i >= TOTAL_Q) return finish();
+  var q = S.L.gen(); S.q = q; S.tried = false;
+  var h = '<div class="top"><button class="back" id="bk">← Balik</button><div class="stars">'+(S.i+1)+' / '+TOTAL_Q+'</div></div>'+
+    '<div class="bar"><i style="width:'+(S.i/TOTAL_Q*100)+'%"></i></div>'+
+    '<div class="q"><div class="prompt" id="pr">'+q.prompt+' 🔊</div><div class="vis'+(q.big?' big':'')+'">'+q.vis+'</div></div>'+
+    '<div class="choices'+(q.two?' two':'')+'">';
+  q.ch.forEach(function(c,i){ h += '<button class="ch'+(q.small?' small':'')+'" data-i="'+i+'">'+c.html+'</button>'; });
+  h += '</div>';
+  app.innerHTML = h;
+  document.getElementById("bk").onclick = function(){ try{speechSynthesis.cancel();}catch(e){} home(); };
+  document.getElementById("pr").onclick = function(){ say(q.say); };
+  setTimeout(function(){ say(q.say); }, 250);
+  Array.prototype.forEach.call(app.querySelectorAll(".ch"), function(b){
+    b.onclick = function(){
+      var i = +b.getAttribute("data-i");
+      if(i === q.ans){
+        b.classList.add("ok"); sndOk();
+        if(!S.tried) S.score++;
+        S.i++;
+        Array.prototype.forEach.call(app.querySelectorAll(".ch"), function(x){ x.onclick = null; });
+        setTimeout(question, 900);
+      } else {
+        S.tried = true; b.classList.add("no"); sndNo();
+        setTimeout(function(){ b.classList.remove("no"); }, 450);
+      }
+    };
+  });
+}
+
+function finish(){
+  var n = S.score >= 9 ? 3 : S.score >= 6 ? 2 : 1;
+  if(!stars[S.L.id] || stars[S.L.id] < n){ stars[S.L.id] = n; save("jk_stars", stars); }
+  sndWin();
+  var msg = n===3 ? "Hebat! 🎉" : n===2 ? "Bagus! 👏" : "Cuba lagi ya! 💪";
+  say(msg.replace(/[^\w\s!]/g,""));
+  var nextL = LEVELS[S.L.id]; 
+  app.innerHTML = '<div class="center" style="padding-top:40px"><div class="big">'+rep("⭐",n)+'</div><h1>'+msg+'</h1>'+
+    '<p style="font-size:22px">Betul '+S.score+' / '+TOTAL_Q+' (kali pertama)</p>'+
+    '<p><button class="btn gr" id="again">🔁 Main Lagi</button></p>'+
+    (nextL ? '<p><button class="btn alt" id="next">➡️ Level Seterusnya</button></p>' : '')+
+    '<p><button class="btn" id="hm">🏠 Menu</button></p></div>';
+  document.getElementById("again").onclick = function(){ start(S.L); };
+  document.getElementById("hm").onclick = home;
+  var nb = document.getElementById("next");
+  if(nb) nb.onclick = function(){ if(!nextL.free && !unlocked){ home(); paywall(); } else start(nextL); };
+}
+
+home();
+</script>
+</body>
+</html>
