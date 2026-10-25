@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Lukis Ajaib</title>
+<link rel="stylesheet" href="../mb.css">
+<style>
+:root{--bg:#fff0f6}
+body{overscroll-behavior:none}
+#app{padding-bottom:80px}
+.cvwrap{background:#fff;border-radius:22px;box-shadow:0 5px 0 #0002;overflow:hidden;line-height:0}
+canvas{width:100%;display:block;touch-action:none;cursor:crosshair}
+.pal{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.sw{width:32px;height:32px;border-radius:50%;border:4px solid #fff;box-shadow:0 2px 0 #0003;padding:0}
+.sw.on{border-color:var(--ink);transform:scale(1.15)}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.tl{position:relative;border:0;border-radius:16px;background:#fff;padding:8px 2px;font:inherit;font-size:12px;font-weight:800;color:var(--ink);box-shadow:0 4px 0 #0002}
+.tl .e{display:block;font-size:26px;line-height:1.2}
+.tl.on{background:var(--y)}
+.tl:active{transform:translateY(2px)}
+.tl.lk::after{content:"🔒";position:absolute;top:2px;right:4px;font-size:12px}
+.stamps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.stp{border:0;background:#fff;border-radius:14px;font-size:28px;padding:4px 8px;box-shadow:0 3px 0 #0002}
+.stp.on{background:var(--y)}
+.sizes{display:flex;gap:10px;justify-content:center;margin:6px 0 10px;align-items:center}
+.sz{border:0;background:#fff;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #0002}
+.sz.on{background:var(--y)}
+.sz i{display:block;background:var(--ink);border-radius:50%}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top"><a class="back" href="../">🏠</a><div class="title">Lukis Ajaib 🎨</div><button class="vb" id="vb">🔊</button></div>
+  <div class="cvwrap"><canvas id="cv"></canvas></div>
+  <div class="pal" id="pal"></div>
+  <div class="sizes" id="sizes"></div>
+  <div class="tools" id="tools"></div>
+  <div class="stamps hide" id="stamps"></div>
+</div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script>
+var GAME="lukis";
+var COLORS=[["#e03131","merah"],["#ff922b","jingga"],["#fcc419","kuning"],["#40c057","hijau"],["#228be6","biru"],["#9c36b5","ungu"],["#f783ac","merah jambu"],["#8d5524","coklat"],["#212529","hitam"]];
+var STAMPS=["⭐","❤️","🌈","🦋","🌸","🐱","🐶","🚗","🏠","☀️"];
+var PRAISE=["Cantiknya lukisan kamu!","Wah, warna cantik!","Hebat! Teruskan melukis!","Pandai kamu melukis!"];
+var TOOLS=[
+  {id:"pen",e:"✏️",n:"Pensel",lock:false},
+  {id:"eraser",e:"🧽",n:"Padam",lock:false},
+  {id:"rainbow",e:"🌈",n:"Pelangi",lock:true},
+  {id:"sparkle",e:"✨",n:"Kilau",lock:true},
+  {id:"stamp",e:"🧸",n:"Cop",lock:true},
+  {id:"undo",e:"↩️",n:"Undur",act:true},
+  {id:"clear",e:"🗑️",n:"Padam Semua",act:true},
+  {id:"save",e:"💾",n:"Simpan",act:true,lock:true}
+];
+var SIZES=[6,14,28];
+var tool="pen", color=COLORS[0][0], size=14, stamp=STAMPS[0], hue=0, acc=0, strokes=0, drawing=false, last=null, undo=[], clearArm=false;
+
+var cv=document.getElementById("cv"), ctx=cv.getContext("2d"), dpr=window.devicePixelRatio||1;
+function initCanvas(){
+  var w=cv.parentNode.clientWidth||340, h=Math.max(260,Math.min(420,Math.round(window.innerHeight*0.42)));
+  cv.style.height=h+"px"; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+}
+function pos(e){ var r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+function pushUndo(){ try{ undo.push(ctx.getImageData(0,0,cv.width,cv.height)); if(undo.length>12) undo.shift(); }catch(e){} }
+function setStroke(){
+  ctx.lineCap="round"; ctx.lineJoin="round"; ctx.lineWidth=tool==="eraser"?size*1.6:size;
+  if(tool==="eraser") ctx.strokeStyle="#fff";
+  else if(tool==="rainbow"){ hue=(hue+7)%360; ctx.strokeStyle="hsl("+hue+",90%,55%)"; }
+  else ctx.strokeStyle=color;
+}
+function star(x,y,r,c){
+  ctx.save(); ctx.translate(x,y); ctx.fillStyle=c; ctx.beginPath();
+  for(var i=0;i<8;i++){ var a=i*Math.PI/4, rr=i%2?r*0.35:r; ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); }
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function spark(p){ var c=pick(COLORS)[0]; star(p.x+rnd(-18,18),p.y+rnd(-18,18),rnd(6,13),c); }
+function dot(p){
+  setStroke(); ctx.beginPath(); ctx.arc(p.x,p.y,ctx.lineWidth/2,0,Math.PI*2); ctx.fillStyle=ctx.strokeStyle; ctx.fill();
+}
+function seg(a,b){
+  setStroke(); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  if(tool==="sparkle"){ acc+=Math.hypot(b.x-a.x,b.y-a.y); if(acc>16){ acc=0; spark(b); } }
+}
+function doStamp(p){
+  ctx.font=(size*2+26)+"px serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillStyle="#000"; ctx.fillText(stamp,p.x,p.y); beep(700,.1);
+}
+cv.addEventListener("pointerdown",function(e){
+  e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(x){}
+  pushUndo(); var p=pos(e); last=p;
+  if(tool==="stamp"){ doStamp(p); drawing=false; return; }
+  drawing=true; dot(p); if(tool==="sparkle") spark(p);
+});
+cv.addEventListener("pointermove",function(e){ if(!drawing) return; e.preventDefault(); var p=pos(e); seg(last,p); last=p; });
+function endStroke(){ if(!drawing) return; drawing=false; strokes++; if(strokes%6===0) say(pick(PRAISE)); }
+cv.addEventListener("pointerup",endStroke);
+cv.addEventListener("pointercancel",endStroke);
+
+// ====== UI ======
+function need(){ if(mbHas(GAME)) return true; mbPaywall(GAME,"Lukis Ajaib: Buka Semua",render); return false; }
+function render(){
+  var pal=document.getElementById("pal"); pal.innerHTML="";
+  COLORS.forEach(function(c){
+    var b=document.createElement("button"); b.className="sw"+(c[0]===color&&tool!=="rainbow"?" on":""); b.style.background=c[0];
+    b.onclick=function(){ color=c[0]; if(tool==="eraser"||tool==="rainbow") tool="pen"; say(c[1]+"!"); render(); };
+    pal.appendChild(b);
+  });
+  var sz=document.getElementById("sizes"); sz.innerHTML="";
+  SIZES.forEach(function(s,i){
+    var b=document.createElement("button"); b.className="sz"+(s===size?" on":""); b.innerHTML='<i style="width:'+(8+i*8)+'px;height:'+(8+i*8)+'px"></i>';
+    b.onclick=function(){ size=s; render(); }; sz.appendChild(b);
+  });
+  var tl=document.getElementById("tools"); tl.innerHTML="";
+  TOOLS.forEach(function(t){
+    var b=document.createElement("button"); b.className="tl"+(tool===t.id&&!t.act?" on":"")+(t.lock&&!mbHas(GAME)?" lk":"");
+    b.innerHTML='<span class="e">'+t.e+'</span>'+t.n;
+    b.onclick=function(){
+      if(t.lock&&!need()) return;
+      if(t.id==="undo"){ var im=undo.pop(); if(im){ ctx.putImageData(im,0,0); beep(500,.1); } return; }
+      if(t.id==="clear"){
+        if(!clearArm){ clearArm=true; say("Tekan lagi untuk padam semua"); setTimeout(function(){ clearArm=false; },2500); return; }
+        clearArm=false; pushUndo(); ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height); ctx.restore(); say("Kanvas bersih! Jom lukis lagi!"); return;
+      }
+      if(t.id==="save"){ saveImg(); return; }
+      tool=t.id; say(t.n+"!"); render();
+    };
+    tl.appendChild(b);
+  });
+  var st=document.getElementById("stamps"); st.className="stamps"+(tool==="stamp"?"":" hide"); st.innerHTML="";
+  STAMPS.forEach(function(s){
+    var b=document.createElement("button"); b.className="stp"+(s===stamp?" on":""); b.textContent=s;
+    b.onclick=function(){ stamp=s; render(); }; st.appendChild(b);
+  });
+}
+function saveImg(){
+  cv.toBlob(function(b){
+    if(!b) return;
+    try{
+      var f=new File([b],"lukisan.png",{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){ navigator.share({files:[f],title:"Lukisan saya"}).catch(function(){}); }
+      else { var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="lukisan.png"; document.body.appendChild(a); a.click(); a.remove(); }
+    }catch(e){}
+    say("Lukisan disimpan! Cantiknya!");
+  });
+}
+document.getElementById("vb").textContent=voiceOn?"🔊":"🔇";
+document.getElementById("vb").onclick=toggleVoice;
+initCanvas(); render();
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Puzzle Geng Comel</title>
+<link rel="stylesheet" href="../mb.css">
+<style>
+:root{--bg:#e8f7ff}
+body{overscroll-behavior:none}
+.card{display:flex;flex-direction:column;justify-content:flex-start;background:var(--card);border-radius:22px;padding:8px 8px 12px;text-align:center;box-shadow:0 5px 0 #0002;border:0;font:inherit;color:inherit;position:relative}
+.card:active{transform:translateY(3px)}
+.thumb{width:100%;aspect-ratio:1;border-radius:16px;background-size:cover}
+.card .nm{font-weight:800;margin-top:6px}.card .st{min-height:24px;font-size:18px}
+.board{position:relative;margin:0 auto 12px;background:#fff;border-radius:16px;box-shadow:0 5px 0 #0002;overflow:hidden;display:grid}
+.slot{position:relative;border:2px dashed #0002;overflow:hidden}
+.slot .gh{position:absolute;inset:0;opacity:.2;background-repeat:no-repeat}
+.slot.full{border-color:transparent}.slot.full .gh{opacity:1}
+.tray{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:90px;padding:8px;background:#ffffff99;border-radius:18px}
+.pc{background-repeat:no-repeat;border:3px solid #fff;border-radius:10px;box-shadow:0 3px 0 #0003;touch-action:none;cursor:grab}
+.pc.shake{animation:shake .4s}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script>
+var GAME="puzzle";
+var stars=load("jp_stars",{});
+
+// ====== Watak asli: Geng Comel (dilukis dengan kod) ======
+function kucing(){ return '<path d="M78 82 Q100 72 90 48" stroke="#f08c00" stroke-width="7" fill="none" stroke-linecap="round"/>'+
+ '<ellipse cx="50" cy="72" rx="24" ry="22" fill="#ffa94d"/><ellipse cx="50" cy="80" rx="13" ry="13" fill="#ffe8cc"/>'+
+ '<polygon points="30,28 34,6 49,20" fill="#ffa94d"/><polygon points="70,28 66,6 51,20" fill="#ffa94d"/>'+
+ '<polygon points="34,24 36,12 44,20" fill="#ffc9c9"/><polygon points="66,24 64,12 56,20" fill="#ffc9c9"/>'+
+ '<circle cx="50" cy="40" r="23" fill="#ffa94d"/>'+
+ '<path d="M44 20 L44 27 M50 18 L50 26 M56 20 L56 27" stroke="#f08c00" stroke-width="3" stroke-linecap="round"/>'+
+ '<circle cx="41" cy="38" r="4" fill="#2b2b2b"/><circle cx="59" cy="38" r="4" fill="#2b2b2b"/><circle cx="42.3" cy="36.6" r="1.4" fill="#fff"/><circle cx="60.3" cy="36.6" r="1.4" fill="#fff"/>'+
+ '<polygon points="47,45 53,45 50,49" fill="#ff6b81"/><path d="M50 49 Q46 55 41 52 M50 49 Q54 55 59 52" stroke="#5c3b1e" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+
+ '<path d="M30 44 L18 41 M30 48 L18 50 M70 44 L82 41 M70 48 L82 50" stroke="#5c3b1e" stroke-width="1.4" stroke-linecap="round"/>'+
+ '<circle cx="34" cy="48" r="4" fill="#ff8787" opacity=".6"/><circle cx="66" cy="48" r="4" fill="#ff8787" opacity=".6"/>'+
+ '<ellipse cx="38" cy="92" rx="8" ry="5" fill="#fff"/><ellipse cx="62" cy="92" rx="8" ry="5" fill="#fff"/>'; }
+function itik(){ return '<ellipse cx="50" cy="70" rx="27" ry="22" fill="#ffe066"/>'+
+ '<ellipse cx="33" cy="70" rx="9" ry="14" fill="#fcc419" transform="rotate(-15 33 70)"/>'+
+ '<circle cx="50" cy="36" r="20" fill="#ffe066"/><path d="M50 16 Q44 8 52 10 Q58 12 50 16" fill="#ffe066" stroke="#fcc419" stroke-width="1.5"/>'+
+ '<ellipse cx="50" cy="45" rx="12" ry="6" fill="#ff922b"/><path d="M40 44 Q50 48 60 44" stroke="#e8590c" stroke-width="1.4" fill="none"/>'+
+ '<circle cx="42" cy="32" r="3.6" fill="#2b2b2b"/><circle cx="58" cy="32" r="3.6" fill="#2b2b2b"/><circle cx="43.2" cy="30.8" r="1.2" fill="#fff"/><circle cx="59.2" cy="30.8" r="1.2" fill="#fff"/>'+
+ '<circle cx="35" cy="40" r="4" fill="#ff8787" opacity=".55"/><circle cx="65" cy="40" r="4" fill="#ff8787" opacity=".55"/>'+
+ '<polygon points="38,90 30,97 46,97" fill="#ff922b"/><polygon points="62,90 54,97 70,97" fill="#ff922b"/>'; }
+function arnab(){ return '<ellipse cx="38" cy="20" rx="7" ry="19" fill="#fff" stroke="#dee2e6" stroke-width="1.5"/><ellipse cx="62" cy="20" rx="7" ry="19" fill="#fff" stroke="#dee2e6" stroke-width="1.5"/>'+
+ '<ellipse cx="38" cy="21" rx="3.5" ry="13" fill="#ffc9c9"/><ellipse cx="62" cy="21" rx="3.5" ry="13" fill="#ffc9c9"/>'+
+ '<ellipse cx="50" cy="76" rx="22" ry="20" fill="#fff" stroke="#dee2e6" stroke-width="1.5"/>'+
+ '<circle cx="50" cy="46" r="21" fill="#fff" stroke="#dee2e6" stroke-width="1.5"/>'+
+ '<circle cx="42" cy="43" r="3.8" fill="#2b2b2b"/><circle cx="58" cy="43" r="3.8" fill="#2b2b2b"/><circle cx="43.2" cy="41.8" r="1.3" fill="#fff"/><circle cx="59.2" cy="41.8" r="1.3" fill="#fff"/>'+
+ '<ellipse cx="50" cy="51" rx="3.5" ry="2.6" fill="#ff6b81"/><path d="M50 53 L50 57 M50 57 Q46 61 43 58 M50 57 Q54 61 57 58" stroke="#868e96" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+ '<circle cx="35" cy="52" r="4.5" fill="#ffa8a8" opacity=".6"/><circle cx="65" cy="52" r="4.5" fill="#ffa8a8" opacity=".6"/>'+
+ '<polygon points="70,72 86,76 74,98" fill="#ff922b"/><path d="M80 74 Q82 64 88 66 M80 74 Q78 64 72 66 M80 74 L80 62" stroke="#40c057" stroke-width="3" fill="none" stroke-linecap="round"/>'; }
+function katak(){ return '<ellipse cx="50" cy="94" rx="40" ry="7" fill="#2f9e44"/>'+
+ '<ellipse cx="50" cy="68" rx="29" ry="24" fill="#51cf66"/><ellipse cx="50" cy="75" rx="18" ry="14" fill="#d3f9d8"/>'+
+ '<ellipse cx="50" cy="44" rx="27" ry="19" fill="#51cf66"/>'+
+ '<circle cx="35" cy="26" r="11" fill="#51cf66"/><circle cx="65" cy="26" r="11" fill="#51cf66"/>'+
+ '<circle cx="35" cy="26" r="7.5" fill="#fff"/><circle cx="65" cy="26" r="7.5" fill="#fff"/><circle cx="36" cy="27" r="4" fill="#2b2b2b"/><circle cx="64" cy="27" r="4" fill="#2b2b2b"/><circle cx="37.2" cy="25.6" r="1.4" fill="#fff"/><circle cx="65.2" cy="25.6" r="1.4" fill="#fff"/>'+
+ '<path d="M32 48 Q50 62 68 48" stroke="#2b2b2b" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+
+ '<circle cx="30" cy="46" r="4.5" fill="#ff8787" opacity=".55"/><circle cx="70" cy="46" r="4.5" fill="#ff8787" opacity=".55"/>'+
+ '<ellipse cx="30" cy="88" rx="11" ry="5" fill="#40c057"/><ellipse cx="70" cy="88" rx="11" ry="5" fill="#40c057"/>'; }
+
+function scene(items){
+  var bg='<rect width="300" height="300" fill="#bfe9ff"/><circle cx="252" cy="46" r="24" fill="#ffd43b"/>'+
+   '<ellipse cx="70" cy="50" rx="30" ry="12" fill="#fff"/><ellipse cx="92" cy="42" rx="22" ry="12" fill="#fff"/><ellipse cx="150" cy="82" rx="26" ry="9" fill="#fff" opacity=".9"/>'+
+   '<path d="M0 218 Q75 196 150 216 T300 212 V300 H0 Z" fill="#8ce99a"/><path d="M0 262 Q90 244 180 262 T300 258 V300 H0 Z" fill="#69db7c"/>'+
+   '<circle cx="24" cy="240" r="5" fill="#ff8787"/><circle cx="270" cy="236" r="5" fill="#ffd43b"/><circle cx="250" cy="280" r="5" fill="#f783ac"/><circle cx="40" cy="285" r="5" fill="#fff"/>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">'+bg+
+    items.map(function(it){ return '<g transform="translate('+it[1]+','+it[2]+') scale('+it[3]+')">'+it[0]()+'</g>'; }).join("")+'</svg>';
+}
+var PZ=[
+ {id:1,name:"Mimi Kucing",hi:"Meow meow! Saya Mimi Kucing!",cols:2,rows:2,free:true,svg:function(){ return scene([[kucing,40,66,2.2]]); }},
+ {id:2,name:"Duti Itik",hi:"Kuak kuak! Saya Duti Itik!",cols:2,rows:2,free:true,svg:function(){ return scene([[itik,40,66,2.2]]); }},
+ {id:3,name:"Nobi Arnab",hi:"Hop hop! Saya Nobi Arnab!",cols:2,rows:3,free:false,svg:function(){ return scene([[arnab,40,66,2.2]]); }},
+ {id:4,name:"Kiki Katak",hi:"Kuak kuak ribbit! Saya Kiki Katak!",cols:3,rows:3,free:false,svg:function(){ return scene([[katak,40,66,2.2]]); }},
+ {id:5,name:"Geng Comel",hi:"Yeay! Kami semua Geng Comel!",cols:3,rows:3,free:false,svg:function(){ return scene([[kucing,16,56,1.2],[itik,162,56,1.2],[arnab,16,168,1.2],[katak,162,168,1.2]]); }}
+];
+function dataUrl(p){ return "url('data:image/svg+xml;utf8,"+encodeURIComponent(p.svg()).replace(/'/g,"%27")+"')"; }
+
+var app=document.getElementById("app");
+function totalStars(){ var s=0; for(var k in stars) s+=stars[k]; return s; }
+
+function home(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  var h='<div class="top"><a class="back" href="../">🏠</a><div class="title">Puzzle Geng Comel 🧩</div><button class="vb" id="vb">'+(voiceOn?"🔊":"🔇")+'</button></div><div class="stars" style="display:inline-block;margin-bottom:10px">⭐ '+totalStars()+'</div><div class="grid">';
+  PZ.forEach(function(p){
+    var lk=!p.free&&!mbHas(GAME);
+    h+='<button class="card" data-id="'+p.id+'">'+(lk?'<span class="lock">🔒</span>':'')+'<div class="thumb" style="background-image:'+dataUrl(p)+'"></div><div class="nm">'+p.name+' <small>('+(p.cols*p.rows)+' keping)</small></div><div class="st">'+(stars[p.id]?rep("⭐",stars[p.id]):"")+'</div></button>';
+  });
+  h+='</div>';
+  if(!mbHas(GAME)) h+='<button class="btn alt wide" id="buy">🔓 Buka Semua Puzzle</button>';
+  app.innerHTML=h;
+  document.getElementById("vb").onclick=toggleVoice;
+  Array.prototype.forEach.call(app.querySelectorAll(".card"),function(b){
+    b.onclick=function(){ var p=PZ[+b.getAttribute("data-id")-1]; if(!p.free&&!mbHas(GAME)) return mbPaywall(GAME,"Buka Semua Puzzle",home); play(p); };
+  });
+  var bb=document.getElementById("buy"); if(bb) bb.onclick=function(){ mbPaywall(GAME,"Buka Semua Puzzle",home); };
+}
+
+function play(p){
+  var B=Math.min(window.innerWidth-32,340), pw=B/p.cols, ph=B/p.rows, n=p.cols*p.rows, tw=pw*0.62, th=ph*0.62;
+  var img=dataUrl(p), placed=0, wrongs=0;
+  function bgFor(i){ var c=i%p.cols, r=Math.floor(i/p.cols); return 'background-image:'+img+';background-size:'+(p.cols*100)+'% '+(p.rows*100)+'%;background-position:'+(p.cols>1?c/(p.cols-1)*100:0)+'% '+(p.rows>1?r/(p.rows-1)*100:0)+'%;'; }
+  var h='<div class="top"><button class="back" id="bk">← Balik</button><div class="stars">'+p.name+'</div></div>'+
+    '<div class="board" id="bd" style="width:'+B+'px;height:'+B+'px;grid-template-columns:repeat('+p.cols+',1fr);grid-template-rows:repeat('+p.rows+',1fr)">';
+  for(var i=0;i<n;i++) h+='<div class="slot" data-i="'+i+'"><div class="gh" style="'+bgFor(i)+'"></div></div>';
+  h+='</div><div class="tray" id="tray"></div>';
+  app.innerHTML=h;
+  document.getElementById("bk").onclick=home;
+  var tray=document.getElementById("tray");
+  shuffle(Array.apply(null,Array(n)).map(function(_,i){return i;})).forEach(function(i){
+    var d=document.createElement("div"); d.className="pc"; d.setAttribute("style",bgFor(i)+'width:'+tw+'px;height:'+th+'px;');
+    d.dataset.i=i; tray.appendChild(d); attach(d,i);
+  });
+  say("Jom susun gambar "+p.name+"! Seret kepingan ke tempat yang betul.");
+
+  function attach(d,i){
+    var drag=false;
+    d.addEventListener("pointerdown",function(e){
+      e.preventDefault(); drag=true; try{ d.setPointerCapture(e.pointerId); }catch(x){}
+      d.style.position="fixed"; d.style.width=pw+"px"; d.style.height=ph+"px"; d.style.zIndex=20;
+      d.style.left=(e.clientX-pw/2)+"px"; d.style.top=(e.clientY-ph/2)+"px"; beep(500,.05);
+    });
+    d.addEventListener("pointermove",function(e){ if(!drag) return; d.style.left=(e.clientX-pw/2)+"px"; d.style.top=(e.clientY-ph/2)+"px"; });
+    function drop(e){
+      if(!drag) return; drag=false;
+      d.style.pointerEvents="none";
+      var el=document.elementFromPoint(e.clientX,e.clientY), slot=el&&el.closest?el.closest(".slot"):null;
+      d.style.pointerEvents="";
+      if(slot&&+slot.dataset.i===i&&!slot.classList.contains("full")){
+        slot.classList.add("full"); d.remove(); placed++; sndOk();
+        if(placed===n) win(); else say(pick(["Betul!","Pandai!","Yeay!"]),null,{rate:1.1});
+      } else {
+        wrongs++; d.style.position=""; d.style.left=""; d.style.top=""; d.style.zIndex=""; d.style.width=tw+"px"; d.style.height=th+"px";
+        d.classList.add("shake"); setTimeout(function(){ d.classList.remove("shake"); },400); sndNo();
+        if(wrongs%2===1) say(pick(NOS));
+      }
+    }
+    d.addEventListener("pointerup",drop); d.addEventListener("pointercancel",drop);
+  }
+  function win(){
+    var s=wrongs===0?3:wrongs<=3?2:1;
+    if(!stars[p.id]||stars[p.id]<s){ stars[p.id]=s; save("jp_stars",stars); }
+    sndWin();
+    var nxt=PZ[p.id];
+    setTimeout(function(){
+      app.innerHTML='<div class="center"><div class="board" style="width:'+B+'px;height:'+B+'px;background-image:'+img+';background-size:cover;border:0"></div>'+
+        '<div class="big">'+rep("⭐",s)+'</div><h2>'+p.hi+'</h2>'+
+        '<button class="btn gr wide" id="again">🔁 Main Lagi</button>'+(nxt?'<button class="btn alt wide" id="nx">➡️ Puzzle Seterusnya</button>':'')+'<button class="btn wide" id="hm">🏠 Menu</button></div>';
+      document.getElementById("again").onclick=function(){ play(p); };
+      document.getElementById("hm").onclick=home;
+      var nb=document.getElementById("nx"); if(nb) nb.onclick=function(){ if(!nxt.free&&!mbHas(GAME)){ home(); mbPaywall(GAME,"Buka Semua Puzzle",home); } else play(nxt); };
+      say("Hebat! "+p.hi);
+    },500);
+  }
+}
+home();
+</script>
+</body>
+</html>

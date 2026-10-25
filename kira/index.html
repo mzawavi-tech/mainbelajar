@@ -46,6 +46,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 </head>
 <body>
 <div id="app"></div>
+<script src="../mb.js"></script>
 <script>
 // ====== TETAPAN (ubah di sini) ======
 var UNLOCK_CODES = ["JOMKIRA12"];          // kod buka semua level (bagi lepas pelanggan bayar)
@@ -57,7 +58,7 @@ var TOTAL_Q = 10;
 function load(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 var stars = load("jk_stars", {});     // {levelId: 1..3}
-var unlocked = load("jk_unlocked", false);
+var unlocked = load("jk_unlocked", false) || mbHas("kira");
 
 // ====== Bunyi ======
 var AC = null;
@@ -165,7 +166,7 @@ function home(){
          '<div class="ic">'+L.ic+'</div><div class="nm">'+L.name+'</div><div class="st">'+starStr(stars[L.id])+'</div></button>';
   });
   h += '</div>';
-  if(!unlocked) h += '<p class="center"><button class="btn alt" id="buy">🔓 Buka Semua Level – '+PRICE+'</button></p>';
+  if(!unlocked) h += '<p class="center"><button class="btn alt" id="buy">🔓 Buka Semua Level</button></p>';
   app.innerHTML = h;
   Array.prototype.forEach.call(app.querySelectorAll(".lv"), function(b){
     b.onclick = function(){
@@ -177,21 +178,7 @@ function home(){
   var bb = document.getElementById("buy"); if(bb) bb.onclick = paywall;
 }
 
-function paywall(){
-  var m = document.createElement("div"); m.className = "modal";
-  m.innerHTML = '<div class="box"><div class="big">🔒</div><h2>Buka Semua Level</h2>'+
-    '<p>Tambah, Tolak, Bentuk dan level baharu. Bayar sekali sahaja, tiada iklan.</p>'+
-    (BUY_LINK ? '<a class="btn gr" href="'+BUY_LINK+'" target="_blank" style="display:block;text-decoration:none">Beli '+PRICE+'</a>' : '<div class="btn gr">Beli '+PRICE+'</div>')+
-    '<p>Dah ada kod?</p><input id="code" placeholder="MASUK KOD" maxlength="20">'+
-    '<button class="btn" id="go">Buka</button> <button class="btn alt" id="x">Tutup</button><p id="msg"></p></div>';
-  document.body.appendChild(m);
-  m.querySelector("#x").onclick = function(){ m.remove(); };
-  m.querySelector("#go").onclick = function(){
-    var v = m.querySelector("#code").value.trim().toUpperCase();
-    if(UNLOCK_CODES.indexOf(v) >= 0){ unlocked = true; save("jk_unlocked", true); sndWin(); m.remove(); home(); }
-    else { sndNo(); m.querySelector("#msg").textContent = "Kod salah, cuba lagi."; }
-  };
-}
+function paywall(){ mbPaywall("kira","Buka Semua Level",function(){ unlocked=true; home(); }); }
 
 var S = null;
 function start(L){ S = {L:L, i:0, score:0, tried:false}; question(); }

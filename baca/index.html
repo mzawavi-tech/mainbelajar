@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Jom Baca</title>
+<link rel="stylesheet" href="../mb.css">
+<style>
+:root{--bg:#f0ffe9}
+.slots{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.slot{min-width:84px;height:64px;border:4px dashed #0003;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;background:#fff}
+.slot.on{border-style:solid;border-color:var(--g);background:#e6ffe9}
+.ch.s{font-size:30px}
+.word{font-size:46px;font-weight:900;letter-spacing:2px;color:var(--p)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script>
+var GAME="baca", TOTAL_Q=10;
+var stars=load("jb_stars",{});
+
+var LET="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+var LN={A:"a",B:"be",C:"ce",D:"de",E:"e",F:"ef",G:"ge",H:"ha",I:"i",J:"je",K:"ka",L:"el",M:"em",N:"en",O:"o",P:"pe",Q:"ki",R:"er",S:"es",T:"te",U:"u",V:"ve",W:"we",X:"eks",Y:"ye",Z:"zed"};
+var WORDS=[["ayam","🐔","a-yam"],["bola","⚽","bo-la"],["kucing","🐱","ku-cing"],["itik","🦆","i-tik"],["gajah","🐘","ga-jah"],["ikan","🐟","i-kan"],["lembu","🐄","lem-bu"],["nasi","🍚","na-si"],["pisang","🍌","pi-sang"],["rumah","🏠","ru-mah"],["buku","📖","bu-ku"],["kereta","🚗","ke-re-ta"],["bulan","🌙","bu-lan"],["bintang","⭐","bin-tang"],["epal","🍎","e-pal"],["kasut","👟","ka-sut"],["payung","☂️","pa-yung"],["bunga","🌸","bu-nga"],["topi","🧢","to-pi"],["tangan","✋","ta-ngan"]];
+var CONS="bcdfghjklmnprstwy".split(""), VOW="aeiou".split("");
+
+function genLetter(){
+  var L=pick(LET), set=uniq3(L,function(){return pick(LET);});
+  return {prompt:"Mana huruf "+L+"?", vis:"🔊", say:"Mana huruf "+LN[L]+"?", ch:set.map(function(x){return x+x.toLowerCase();}), ans:set.indexOf(L), ok:"Huruf "+LN[L]};
+}
+function genFirst(){
+  var w=pick(WORDS), F=w[0][0].toUpperCase(), set=uniq3(F,function(){return pick(LET);});
+  return {prompt:"Huruf pertama?", vis:w[1]+"<div class='word'>"+w[0]+"</div>", say:"Ini "+w[0]+". "+w[0]+" bermula dengan huruf apa?", show:"Ini "+w[0]+". Bermula dengan huruf apa?", ch:set, ans:set.indexOf(F), ok:LN[F]+" untuk "+w[0]};
+}
+function genSyl(){
+  var s=pick(CONS)+pick(VOW), set=uniq3(s,function(){ return pick(CONS)+pick(VOW); });
+  return {prompt:"Mana suku kata ini?", vis:"🔊", say:"Mana suku kata "+s+"?", show:"Mana suku kata '"+s+"'?", ch:set, ans:set.indexOf(s), ok:s, small:true};
+}
+function genRead(){
+  var w=pick(WORDS), set=uniq3(w,function(){return pick(WORDS);});
+  return {prompt:"Baca dan pilih gambar", vis:"<div class='word'>"+w[0]+"</div>", say:"Baca perkataan ini. "+w[0]+". Mana gambarnya?", show:"Baca: "+w[0]+". Mana gambarnya?", ch:set.map(function(x){return x[1];}), ans:set.indexOf(w), ok:w[0]};
+}
+function genMissing(){
+  var w=pick(WORDS), word=w[0], idx=rnd(0,word.length-1), L=word[idx].toUpperCase();
+  var set=uniq3(L,function(){return pick(LET);});
+  var shown=word.split("").map(function(c,i){return i===idx?"_":c;}).join("");
+  return {prompt:"Huruf apa yang hilang?", vis:w[1]+"<div class='word'>"+shown+"</div>", say:"Perkataan "+word+". Huruf apa yang hilang?", show:"Huruf apa yang hilang?", ch:set.map(function(x){return x.toLowerCase();}), ans:set.indexOf(L), ok:word};
+}
+var LEVELS=[
+  {id:1,name:"Kenal Huruf",ic:"🔤",free:true,gen:genLetter},
+  {id:2,name:"Huruf Pertama",ic:"🐱",free:true,gen:genFirst},
+  {id:3,name:"Suku Kata",ic:"🧩",free:true,gen:genSyl},
+  {id:4,name:"Susun Perkataan",ic:"🧱",free:false,mode:"build"},
+  {id:5,name:"Baca & Pilih",ic:"👀",free:false,gen:genRead},
+  {id:6,name:"Huruf Hilang",ic:"✏️",free:false,gen:genMissing}
+];
+
+var app=document.getElementById("app");
+function totalStars(){ var s=0; for(var k in stars) s+=stars[k]; return s; }
+function shell(){ app.innerHTML='<div id="hd"></div><div id="qa"></div>'; }
+function hd(back,right,pct){ document.getElementById("hd").innerHTML='<div class="top"><button class="back" id="bk">← Balik</button><div class="stars">'+right+'</div></div><div class="bar"><i style="width:'+pct+'%"></i></div>'; document.getElementById("bk").onclick=back; }
+
+function home(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  var h='<div class="top"><a class="back" href="../">🏠</a><div class="title">Jom Baca 📚</div><div class="stars">⭐ '+totalStars()+'</div><button class="vb" id="vb">'+(voiceOn?"🔊":"🔇")+'</button></div><div class="grid">';
+  LEVELS.forEach(function(L){
+    var lk=!L.free&&!mbHas(GAME);
+    h+='<button class="lv" data-id="'+L.id+'">'+(lk?'<span class="lock">🔒</span>':'')+'<div class="ic">'+L.ic+'</div><div class="nm">'+L.name+'</div><div class="st">'+(stars[L.id]?rep("⭐",stars[L.id]):"")+'</div></button>';
+  });
+  h+='</div>';
+  if(!mbHas(GAME)) h+='<button class="btn alt wide" id="buy">🔓 Buka Semua Level</button>';
+  app.innerHTML=h;
+  document.getElementById("vb").onclick=toggleVoice;
+  Array.prototype.forEach.call(app.querySelectorAll(".lv"),function(b){
+    b.onclick=function(){ var L=LEVELS[+b.getAttribute("data-id")-1]; if(!L.free&&!mbHas(GAME)) return mbPaywall(GAME,"Buka Semua Level",home); start(L); };
+  });
+  var bb=document.getElementById("buy"); if(bb) bb.onclick=function(){ mbPaywall(GAME,"Buka Semua Level",home); };
+}
+
+var S=null;
+function start(L){ S={L:L,i:0,score:0}; next(); }
+function next(){
+  if(S.i>=TOTAL_Q) return finish();
+  shell(); hd(function(){ try{speechSynthesis.cancel();}catch(e){} home(); },(S.i+1)+" / "+TOTAL_Q,S.i/TOTAL_Q*100);
+  if(S.L.mode==="build") return build();
+  var q=S.L.gen();
+  var h='<div class="q"><div class="prompt" id="pr">'+q.prompt+' 🔊</div><div class="vis">'+q.vis+'</div></div><div class="choices'+(q.small?' ':'')+'">';
+  q.ch.forEach(function(c,i){ h+='<button class="ch'+(q.small?' s':'')+'" data-i="'+i+'">'+c+'</button>'; });
+  h+='</div>';
+  document.getElementById("qa").innerHTML=h;
+  document.getElementById("pr").onclick=function(){ say(q.say,null,{show:q.show}); };
+  setTimeout(function(){ say(q.say,null,{show:q.show}); },200);
+  var done=false, tried=false;
+  Array.prototype.forEach.call(document.querySelectorAll(".ch"),function(b){
+    b.onclick=function(){
+      if(done) return; var i=+b.getAttribute("data-i");
+      if(i===q.ans){ done=true; b.classList.add("ok"); sndOk(); if(!tried) S.score++; S.i++; say(pick(OKS)+" "+q.ok); setTimeout(next,2200); }
+      else { tried=true; b.classList.add("no"); sndNo(); setTimeout(function(){ b.classList.remove("no"); },450); say(pick(NOS)); }
+    };
+  });
+}
+
+// ====== Susun Perkataan ======
+function build(){
+  var w=pick(WORDS), sy=w[2].split("-"), pos=0, wrong=false;
+  var order=shuffle(sy.map(function(s,i){return {s:s,i:i};}));
+  var h='<div class="q"><div class="prompt" id="pr">Susun perkataan 🔊</div><div class="vis" style="font-size:72px">'+w[1]+'</div><div class="slots">';
+  sy.forEach(function(s,i){ h+='<div class="slot" id="sl'+i+'">?</div>'; });
+  h+='</div></div><div class="choices">';
+  order.forEach(function(o,k){ h+='<button class="ch s" data-k="'+k+'">'+o.s+'</button>'; });
+  h+='</div>';
+  document.getElementById("qa").innerHTML=h;
+  var sayQ="Susun suku kata untuk perkataan "+w[0]+".";
+  document.getElementById("pr").onclick=function(){ say(sayQ,null,{show:"Susun: "+w[0]}); };
+  setTimeout(function(){ say(sayQ,null,{show:"Susun: "+w[0]}); },200);
+  Array.prototype.forEach.call(document.querySelectorAll(".ch"),function(b){
+    b.onclick=function(){
+      if(b.classList.contains("hide")) return;
+      var s=order[+b.getAttribute("data-k")].s;
+      if(s===sy[pos]){
+        var sl=document.getElementById("sl"+pos); sl.textContent=s; sl.classList.add("on"); b.classList.add("hide"); sndOk(); pos++;
+        if(pos===sy.length){ if(!wrong) S.score++; S.i++; setTimeout(function(){ say(pick(OKS)+" "+w[0]); },300); setTimeout(next,2400); }
+        else say(s);
+      } else { wrong=true; b.classList.add("no"); sndNo(); setTimeout(function(){ b.classList.remove("no"); },450); say(pick(NOS)); }
+    };
+  });
+}
+
+function finish(){
+  var n=S.score>=9?3:S.score>=6?2:1;
+  if(!stars[S.L.id]||stars[S.L.id]<n){ stars[S.L.id]=n; save("jb_stars",stars); }
+  sndWin();
+  var msg=n===3?"Hebat! Kamu pandai membaca!":n===2?"Bagus! Sikit lagi!":"Jom cuba lagi ya!";
+  setTimeout(function(){ say(msg+" Betul "+S.score+" daripada 10."); },500);
+  var nxt=LEVELS[S.L.id];
+  app.innerHTML='<div class="center" style="padding-top:30px"><div class="big">'+rep("⭐",n)+'</div><h1>'+msg+'</h1><p style="font-size:22px">Betul '+S.score+' / 10 (kali pertama)</p>'+
+    '<button class="btn gr wide" id="again">🔁 Main Lagi</button>'+(nxt?'<button class="btn alt wide" id="nx">➡️ Level Seterusnya</button>':'')+'<button class="btn wide" id="hm">🏠 Menu</button></div>';
+  document.getElementById("again").onclick=function(){ start(S.L); };
+  document.getElementById("hm").onclick=home;
+  var nb=document.getElementById("nx");
+  if(nb) nb.onclick=function(){ if(!nxt.free&&!mbHas(GAME)){ home(); mbPaywall(GAME,"Buka Semua Level",home); } else start(nxt); };
+}
+home();
+</script>
+</body>
+</html>

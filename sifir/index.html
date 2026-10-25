@@ -55,6 +55,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 <body>
 <div id="app"></div>
 <div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
 <script>
 // ====== TETAPAN ======
 var UNLOCK_CODES = ["JOMSIFIR12"];   // kod buka semua sifir (bagi lepas pelanggan bayar)
@@ -64,7 +65,7 @@ var FREE = [1,2,5,10];               // sifir percuma
 
 function load(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-var stars = load("js_stars",{}), unlocked = load("js_unlocked",false), best = load("js_best",0), voiceOn = load("js_voice",true);
+var stars = load("js_stars",{}), unlocked = load("js_unlocked",false) || mbHas("sifir"), best = load("js_best",0), voiceOn = load("js_voice",true);
 
 // ====== Bunyi ======
 var AC=null;
@@ -191,7 +192,7 @@ function home(){
     h+='<button class="tb" data-t="'+t+'" style="background:'+hue(t)+'">'+(lk?'<span class="lock">🔒</span>':'')+'<div class="tn">'+t+'</div><div class="ts">'+(stars[t]?rep("⭐",stars[t]):"Sifir")+'</div></button>';
   }
   h+='</div><button class="btn pp wide" id="timed">⏱️ Lawan Masa 60 Saat'+(best?" (Terbaik: "+best+")":"")+'</button>';
-  if(!unlocked) h+='<button class="btn alt wide" id="buy">🔓 Buka Semua Sifir – '+PRICE+'</button>';
+  if(!unlocked) h+='<button class="btn alt wide" id="buy">🔓 Buka Semua Sifir</button>';
   app.innerHTML=h;
   document.getElementById("vb").onclick=toggleVoice;
   Array.prototype.forEach.call(app.querySelectorAll(".tb"),function(b){
@@ -201,20 +202,7 @@ function home(){
   var bb=document.getElementById("buy"); if(bb) bb.onclick=paywall;
 }
 
-function paywall(){
-  say("Sifir ini berkunci. Minta ibu bapa buka ya!");
-  var m=document.createElement("div"); m.className="modal";
-  m.innerHTML='<div class="box"><div class="big">🔒</div><h2>Buka Semua Sifir</h2><p>Sifir 3, 4, 6, 7, 8, 9, 11, 12. Bayar sekali sahaja, tiada iklan.</p>'+
-    (BUY_LINK?'<a class="btn gr" href="'+BUY_LINK+'" target="_blank" style="display:block;text-decoration:none">Beli '+PRICE+'</a>':'<div class="btn gr">Beli '+PRICE+'</div>')+
-    '<p>Dah ada kod?</p><input id="code" placeholder="MASUK KOD" maxlength="20"><button class="btn" id="go">Buka</button> <button class="btn alt" id="x">Tutup</button><p id="msg"></p></div>';
-  document.body.appendChild(m);
-  m.querySelector("#x").onclick=function(){ m.remove(); };
-  m.querySelector("#go").onclick=function(){
-    var v=m.querySelector("#code").value.trim().toUpperCase();
-    if(UNLOCK_CODES.indexOf(v)>=0){ unlocked=true; save("js_unlocked",true); sndWin(); m.remove(); say("Yeay! Semua sifir dah terbuka!"); home(); }
-    else { sndNo(); m.querySelector("#msg").textContent="Kod salah, cuba lagi."; }
-  };
-}
+function paywall(){ mbPaywall("sifir","Buka Semua Sifir",function(){ unlocked=true; home(); }); }
 
 function tmenu(t){
   stopAll();
