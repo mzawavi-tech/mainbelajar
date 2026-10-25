@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Bahasa Hebat</title>
+<link rel="stylesheet" href="../mb.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script src="../mbquiz.js"></script>
+<script>
+// ---- 1. Golongan kata ----
+var GK=[["meja","Kata Nama"],["guru","Kata Nama"],["sungai","Kata Nama"],["kucing","Kata Nama"],["sekolah","Kata Nama"],["kereta","Kata Nama"],
+ ["berlari","Kata Kerja"],["makan","Kata Kerja"],["menulis","Kata Kerja"],["membaca","Kata Kerja"],["tidur","Kata Kerja"],["berenang","Kata Kerja"],
+ ["cantik","Kata Adjektif"],["tinggi","Kata Adjektif"],["pandai","Kata Adjektif"],["manis","Kata Adjektif"],["rajin","Kata Adjektif"],["gembira","Kata Adjektif"]];
+var gkDeck=mbDeck(GK), GKN=["Kata Nama","Kata Kerja","Kata Adjektif"];
+function genGK(){
+  var it=gkDeck(), ch=shuffle(GKN);
+  return {prompt:"Perkataan ini ialah...", vis:"<span class='wordbig'>"+it[0]+"</span>", say:"Perkataan "+it[0]+" ialah kata apa?", show:"Perkataan '"+it[0]+"' ialah...", ch:ch, ans:ch.indexOf(it[1]), small:true, one:true, ok:it[0]+" ialah "+it[1]};
+}
+// ---- 2. Kata majmuk ----
+var MAJ=["kapal terbang","surat khabar","bunga api","ibu bapa","tali pinggang","kereta api","anak angkat","jalan raya","buku teks","meja tulis"];
+var BUKAN=["buku merah","kereta besar","meja kayu","bunga cantik","rumah baharu","kucing comel","baju kotor","air sejuk","jalan sempit","kasut lama"];
+var majDeck=mbDeck(MAJ), bukanDeck=mbDeck(BUKAN);
+function genMaj(){
+  var m=majDeck(), a=bukanDeck(), b=bukanDeck(); while(b===a) b=bukanDeck();
+  var ch=shuffle([m,a,b]);
+  return {prompt:"Mana kata majmuk?", vis:"", say:"Mana satu kata majmuk?", ch:ch, ans:ch.indexOf(m), small:true, one:true, ok:m+" ialah kata majmuk. Dua kata bergabung dan membawa satu makna."};
+}
+// ---- 3. Imbuhan ----
+var IMB=[["me + tulis","menulis","mentulis","memtulis"],["me + baca","membaca","mebaca","mengbaca"],["me + sapu","menyapu","mensapu","mesapu"],["me + potong","memotong","mempotong","mepotong"],
+ ["me + tarik","menarik","mentarik","metarik"],["me + ambil","mengambil","meambil","memambil"],["me + cuci","mencuci","mecuci","mengcuci"],["me + kejar","mengejar","mekejar","memkejar"],
+ ["ber + lari","berlari","belari","berelari"],["ber + ajar","belajar","berajar","bejar"],["ber + kerja","bekerja","berkerja","berekerja"],["ber + renang","berenang","berrenang","belenang"],["ber + jalan","berjalan","bejalan","berejalan"]];
+var imbDeck=mbDeck(IMB);
+function genImb(){
+  var it=imbDeck(), ch=shuffle([it[1],it[2],it[3]]);
+  return {prompt:"Imbuhan yang betul?", vis:"<span class='wordbig'>"+it[0]+" = ?</span>", say:"Gabungkan imbuhan. "+it[0].replace("+"," dengan ")+". Pilih yang betul.", show:"Imbuhan yang betul? "+it[0], ch:ch, ans:ch.indexOf(it[1]), small:true, one:true, ok:it[1]};
+}
+// ---- 4. Peribahasa ----
+var PER=[["Bagai aur dengan tebing","Saling bergantung dan akrab","Sering bergaduh","Pandai berenang"],
+ ["Seperti kacang lupakan kulit","Orang yang lupa asal usul dan tak mengenang budi","Orang yang suka makan kacang","Orang yang rajin bekerja"],
+ ["Bulat air kerana pembetung, bulat manusia kerana muafakat","Kesepakatan membawa kekuatan","Air paip sentiasa bulat","Manusia suka bergaduh"],
+ ["Berat sama dipikul, ringan sama dijinjing","Bekerjasama dalam susah dan senang","Membawa barang berat sendirian","Hanya suka kerja ringan"],
+ ["Rajin pangkal pandai","Rajin belajar membawa kepandaian","Pandai tidak perlu belajar","Malas itu menyenangkan"],
+ ["Sedikit demi sedikit, lama-lama menjadi bukit","Menyimpan sedikit-sedikit lama-lama jadi banyak","Bukit mudah didaki","Sedikit itu tidak berguna"],
+ ["Malu bertanya sesat jalan","Tidak bertanya menyebabkan kita tidak tahu","Jalan itu berbahaya","Malu itu sifat yang buruk"],
+ ["Kecil-kecil cili padi","Kecil tetapi hebat dan berani","Cili padi itu kecil sahaja","Orang kecil tidak boleh makan cili"],
+ ["Bagai kerbau dicucuk hidung","Orang yang menurut sahaja tanpa berfikir","Kerbau suka bermain","Orang yang berani"],
+ ["Seperti anjing dengan kucing","Sentiasa bergaduh","Suka berkawan","Pandai menjaga rumah"],
+ ["Hendak seribu daya, tak hendak seribu dalih","Kalau mahu pasti ada cara, kalau tak mahu banyak alasan","Seribu orang memberi daya","Dalih itu cara yang baik"],
+ ["Di mana bumi dipijak, di situ langit dijunjung","Hormati adat dan peraturan tempat kita berada","Bumi itu sangat luas","Langit sentiasa tinggi"],
+ ["Terlajak perahu boleh diundur, terlajak kata buruk padahnya","Berhati-hati ketika bercakap","Perahu mudah diundur","Bercakap itu tidak penting"],
+ ["Alang-alang menyeluk pekasam, biar sampai ke pangkal lengan","Jika membuat sesuatu, buat sehingga selesai","Pekasam itu enak","Jangan menyeluk"]];
+var perGen=mbMCQ(PER,{vis:function(it){ return ""; }});
+function genPer(){ var q=perGen(); q.prompt="Apakah maksud peribahasa ini?"; q.vis="<span style='font-size:23px;line-height:1.3;display:block'>“"+q.say+"”</span>"; q.vf=22; q.say="Apakah maksud peribahasa ini? "+q.say; q.show="Maksud peribahasa ini?"; return q; }
+// ---- 5. Aktif / Pasif ----
+var AP=[["Ibu","memasak","masak","nasi"],["Adik","membaca","baca","buku"],["Ayah","membasuh","basuh","kereta"],["Kakak","menyapu","sapu","lantai"],["Cikgu","menulis","tulis","soalan"],["Budak itu","menendang","tendang","bola"],["Nenek","menjahit","jahit","baju"],["Abang","mengikat","ikat","tali"]];
+var apDeck=mbDeck(AP);
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function genAP(){
+  var it=apDeck(), s=it[0], v=it[1], b=it[2], o=it[3], sl=s.charAt(0).toLowerCase()+s.slice(1);
+  var act=s+" "+v+" "+o+".", pas=cap(o)+" di"+b+" oleh "+sl+".";
+  var w1=cap(o)+" "+v+" oleh "+sl+".", w2=s+" di"+b+" "+o+".";
+  var ch=shuffle([pas,w1,w2]);
+  return {prompt:"Tukar kepada ayat pasif", vis:"<span style='font-size:24px;display:block'>"+act+"</span>", vf:24, say:"Tukar ayat aktif kepada ayat pasif. "+act, show:"Tukar kepada ayat pasif: "+act, ch:ch, ans:ch.indexOf(pas), small:true, one:true, ok:pas};
+}
+// ---- 6. Kata hubung ----
+var KH=[["Ali ___ Ahmad bermain bola di padang.","dan"],["Saya mahu minum teh ___ kopi?","atau"],["Hujan lebat, ___ kami tetap ke sekolah.","tetapi"],["Dia tidak hadir ___ demam.","kerana"],["Belajarlah rajin-rajin ___ kamu lulus peperiksaan.","supaya"],["___ kamu rajin, kamu akan berjaya.","jika"],["Adik menangis ___ jatuh dari basikal.","kerana"],["Ibu membeli sayur ___ ikan di pasar.","dan"]];
+var khDeck=mbDeck(KH), KHW=["dan","atau","tetapi","kerana","supaya","jika"];
+function genKH(){
+  var it=khDeck(), ch=uniq3(it[1],function(){ return pick(KHW); });
+  var shown=it[0].replace("___","<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>");
+  return {prompt:"Pilih kata hubung", vis:"<span style='font-size:22px;line-height:1.4;display:block'>"+shown+"</span>", vf:22, say:"Pilih kata hubung yang betul. "+it[0].replace("___","(tiada)"), show:"Pilih kata hubung: "+it[0], ch:ch, ans:ch.indexOf(it[1]), small:true, ok:it[0].replace("___",it[1])};
+}
+mbQuizGame({id:"bahasa",title:"Bahasa Hebat",emoji:"📖",key:"jbh_stars",bg:"#f3f0ff",sub:"Tatabahasa dan peribahasa (Tahun 4-6)",levels:[
+  {id:1,name:"Golongan Kata",ic:"🏷️",free:true,gen:genGK},
+  {id:2,name:"Kata Majmuk",ic:"🔗",free:true,gen:genMaj},
+  {id:3,name:"Imbuhan",ic:"🧩",free:true,gen:genImb},
+  {id:4,name:"Peribahasa",ic:"📜",free:false,gen:genPer},
+  {id:5,name:"Aktif & Pasif",ic:"🔄",free:false,gen:genAP},
+  {id:6,name:"Kata Hubung",ic:"🌉",free:false,gen:genKH}
+]});
+</script>
+</body>
+</html>

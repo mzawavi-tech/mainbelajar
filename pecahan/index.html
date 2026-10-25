@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Jom Pecahan</title>
+<link rel="stylesheet" href="../mb.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script src="../mbquiz.js"></script>
+<script>
+function gcd(a,b){ return b?gcd(b,a%b):a; }
+var DEN={2:"perdua",3:"pertiga",4:"perempat",5:"perlima",6:"perenam",7:"pertujuh",8:"perlapan",9:"persembilan",10:"persepuluh",12:"perdua belas",100:"perseratus"};
+function fsay(n,d){ if(d===1) return nw(n); if(n===1&&d===2) return "setengah"; if(n===1&&d===4) return "suku"; return nw(n)+" "+(DEN[d]||("per "+nw(d))); }
+function frac(n,d){ return '<span class="fr"><i>'+n+'</i><b>'+d+'</b></span>'; }
+function fh(n,d){ var g=gcd(n,d); n/=g; d/=g; return d===1?String(n):frac(n,d); }
+function pie(n,d,sz){
+  var r=sz/2-4, c=sz/2, h='<svg viewBox="0 0 '+sz+' '+sz+'" width="'+sz+'" height="'+sz+'">';
+  for(var i=0;i<d;i++){
+    var a1=i*2*Math.PI/d-Math.PI/2, a2=(i+1)*2*Math.PI/d-Math.PI/2;
+    var x1=c+r*Math.cos(a1), y1=c+r*Math.sin(a1), x2=c+r*Math.cos(a2), y2=c+r*Math.sin(a2);
+    var path=d===1?'':'M'+c+' '+c+' L'+x1.toFixed(2)+' '+y1.toFixed(2)+' A'+r+' '+r+' 0 '+(a2-a1>Math.PI?1:0)+' 1 '+x2.toFixed(2)+' '+y2.toFixed(2)+' Z';
+    h+='<path d="'+path+'" fill="'+(i<n?'#ff8a3d':'#ffe8cc')+'" stroke="#fff" stroke-width="3"/>';
+  }
+  return h+'</svg>';
+}
+function bar(n,d){ var h='<div style="display:flex;max-width:300px;margin:6px auto;border-radius:10px;overflow:hidden;border:3px solid #fff;box-shadow:0 2px 0 #0002">'; for(var i=0;i<d;i++) h+='<div style="flex:1;height:34px;background:'+(i<n?'#3db8ff':'#dff3ff')+';border-right:2px solid #fff"></div>'; return h+'</div>'; }
+function pickFrac3(n,d,poolFn){ var keys=[n+"/"+d]; var guard=0; while(keys.length<3&&guard++<300){ var p=poolFn(); var k=p[0]+"/"+p[1]; if(keys.indexOf(k)<0) keys.push(k); } keys=shuffle(keys); return keys; }
+function fromKey(k){ var p=k.split("/"); return [+p[0],+p[1]]; }
+
+function genPie(){
+  var d=pick([2,3,4,5,6,8,10]), n=rnd(1,d-1);
+  var keys=pickFrac3(n,d,function(){ return Math.random()<.7?[rnd(1,d-1),d]:[rnd(1,5),pick([2,3,4,5,6,8,10])]; }).filter(function(k){ var p=fromKey(k); return p[0]<p[1]; });
+  var all=keys; var g=0; while(all.length<3&&g++<100){ var x=rnd(1,d-1)+"/"+d; if(all.indexOf(x)<0) all.push(x); } all=shuffle(all);
+  return {prompt:"Berapa bahagian berlorek?", vis:pie(n,d,150), vf:20, say:"Berapa bahagian berlorek?", ch:all.map(function(k){ var p=fromKey(k); return frac(p[0],p[1]); }), ans:all.indexOf(n+"/"+d), ok:fsay(n,d)};
+}
+var BASES=[[1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[3,5],[3,8],[5,6],[1,6]];
+function genEquiv(){
+  var b=pick(BASES), k=pick([2,3,4,5]), n=b[0],d=b[1], cn=n*k, cd=d*k;
+  var keys=shuffle([cn+"/"+cd,cn+"/"+(cd+1),(cn+1)+"/"+cd]);
+  return {prompt:"Pecahan setara", vis:frac(n,d)+' = ?', vf:40, say:fsay(n,d)+" sama dengan pecahan yang mana?", ch:keys.map(function(x){ var p=fromKey(x); return frac(p[0],p[1]); }), ans:keys.indexOf(cn+"/"+cd), ok:fsay(n,d)+" sama dengan "+fsay(cn,cd)};
+}
+function genCompare(){
+  var d1=rnd(2,10), d2=rnd(2,10), n1=rnd(1,d1-1), n2=rnd(1,d2-1);
+  while(n1*d2===n2*d1){ d2=rnd(2,10); n2=rnd(1,d2-1); }
+  var big=Math.random()<.5, first=n1*d2>n2*d1;
+  var ansIdx=big?(first?0:1):(first?1:0);
+  return {prompt:big?"Mana lebih besar?":"Mana lebih kecil?", vis:"", say:(big?"Mana lebih besar? ":"Mana lebih kecil? ")+fsay(n1,d1)+" atau "+fsay(n2,d2), ch:[frac(n1,d1),frac(n2,d2)], ans:ansIdx, two:true, ok:"Betul!"};
+}
+function numCh(ans,min){ var set=[ans],g=0; while(set.length<3&&g++<100){ var c=ans+pick([-2,-1,1,2,-5,5,10,-10]); if(c>=min&&set.indexOf(c)<0) set.push(c); } set=shuffle(set); return set; }
+function genDec(){
+  var d=pick([10,100]), n=d===10?rnd(1,9):rnd(1,99);
+  var dec=d===10?(n/10).toFixed(1):(n/100).toFixed(2);
+  var wrong=d===10?[(n/100).toFixed(2),n.toFixed(1)]:[(n/10).toFixed(1),(n/1000).toFixed(3)];
+  if(n%10===0&&d===100) wrong[0]=(n/10+0.1).toFixed(1);
+  if(Math.random()<.5){
+    var opts=shuffle([dec].concat(wrong)); opts=opts.filter(function(x,i){ return opts.indexOf(x)===i; });
+    while(opts.length<3) opts.push((Math.random()*9).toFixed(2));
+    return {prompt:"Tukar kepada perpuluhan", vis:frac(n,d)+' = ?', vf:40, say:fsay(n,d)+" sama dengan perpuluhan berapa?", ch:opts.slice(0,3), ans:opts.slice(0,3).indexOf(dec), ok:fsay(n,d)+" ialah "+dec};
+  }
+  var fr=[n+"/"+d,n+"/"+(d*10),(n*10)+"/"+d]; if(n*10>=d*10) fr[2]=(n+1)+"/"+d;
+  fr=shuffle(fr);
+  return {prompt:"Tukar kepada pecahan", vis:dec+' = ?', vf:40, say:dec+" sama dengan pecahan yang mana?", ch:fr.map(function(k){ var p=fromKey(k); return frac(p[0],p[1]); }), ans:fr.indexOf(n+"/"+d), ok:dec+" ialah "+fsay(n,d)};
+}
+var PCT=[[1,2,50],[1,4,25],[3,4,75],[1,5,20],[1,10,10],[2,5,40],[3,10,30],[4,5,80],[1,20,5],[1,100,1]];
+function genPct(){
+  var t=rnd(1,3);
+  if(t===1){ var f=pick(PCT.slice(0,9)), a=f[2], set=shuffle(uniq3(a,function(){ return pick(PCT)[2]; }));
+    return {prompt:"Tukar kepada peratus", vis:frac(f[0],f[1])+' = ?%', vf:36, say:fsay(f[0],f[1])+" sama dengan berapa peratus?", ch:set.map(function(x){ return x+"%"; }), ans:set.indexOf(a), ok:fsay(f[0],f[1])+" ialah "+a+" peratus"}; }
+  if(t===2){ var q=pick([[0.5,50],[0.25,25],[0.75,75],[0.1,10],[0.2,20],[0.4,40],[0.8,80],[0.05,5]]), set2=shuffle(uniq3(q[1],function(){ return pick([5,10,20,25,40,50,75,80]); }));
+    return {prompt:"Tukar kepada peratus", vis:q[0]+' = ?%', vf:36, say:q[0]+" sama dengan berapa peratus?", ch:set2.map(function(x){ return x+"%"; }), ans:set2.indexOf(q[1]), ok:q[0]+" ialah "+q[1]+" peratus"}; }
+  var p=pick([10,20,25,50,75]), base=pick([40,80,120,200,60,100]), ans=p*base/100, set3=numCh(ans,1);
+  return {prompt:"Peratus daripada kuantiti", vis:p+'% × '+base+' = ?', vf:34, say:p+" peratus daripada "+base+" ialah berapa?", ch:set3.map(String), ans:set3.indexOf(ans), ok:p+" peratus daripada "+base+" ialah "+ans};
+}
+function simp(n,d){ var g=gcd(n,d); return [n/g,d/g]; }
+function genAdd(){
+  var sub=Math.random()<.4, a, b, rd, n1, n2;
+  if(Math.random()<.5){
+    var d=pick([4,5,6,7,8,9,10,12]);
+    if(sub){ n1=rnd(2,d-1); n2=rnd(1,n1-1); } else { n1=rnd(1,d-2); n2=rnd(1,d-1-n1); }
+    a=[n1,d]; b=[n2,d]; rd=d;
+  } else {
+    var pr=pick([[2,4],[3,6],[4,8],[5,10]]), d1=pr[0], d2=pr[1];
+    a=[rnd(1,d1-1),d1]; var an=a[0]*2;
+    if(sub){ b=[rnd(1,an-1),d2]; } else { b=[rnd(1,d2-an),d2]; }
+    rd=d2;
+  }
+  var an2=a[0]*(rd/a[1]), bn2=b[0]*(rd/b[1]), rn=sub?an2-bn2:an2+bn2;
+  var cor=simp(rn,rd), key=cor[0]+"/"+cor[1];
+  var cand=[[a[0]+b[0],a[1]+b[1]],[rn+1,rd],[rn-1,rd],[rn,rd+1],[rn+2,rd],[rn-2,rd]], seen={}, wr=[];
+  seen[key]=1;
+  shuffle(cand).forEach(function(c){ if(c[0]<1||c[0]>c[1]) return; var s2=simp(c[0],c[1]), k=s2[0]+"/"+s2[1]; if(seen[k]) return; seen[k]=1; wr.push(s2); });
+  var fb=1; while(wr.length<2){ var s3=simp(fb,cor[1]+2); var k3=s3[0]+"/"+s3[1]; if(!seen[k3]){ seen[k3]=1; wr.push(s3); } fb++; }
+  var opts=shuffle([cor,wr[0],wr[1]]);
+  function disp(p){ return p[1]===1?String(p[0]):frac(p[0],p[1]); }
+  return {prompt:sub?"Tolak pecahan":"Tambah pecahan", vis:frac(a[0],a[1])+(sub?' − ':' + ')+frac(b[0],b[1])+' = ?', vf:34, say:fsay(a[0],a[1])+(sub?" tolak ":" tambah ")+fsay(b[0],b[1])+" sama dengan berapa?", ch:opts.map(disp), ans:opts.indexOf(cor), ok:"Jawapan ialah "+fsay(cor[0],cor[1]), _chk:[sub,a,b,rn,rd,cor]};
+}
+mbQuizGame({id:"pecahan",title:"Jom Pecahan",emoji:"🍕",key:"jpc_stars",bg:"#fff4e6",sub:"Pecahan, perpuluhan dan peratus (Tahun 4-6)",levels:[
+  {id:1,name:"Kenal Pecahan",ic:"🥧",free:true,gen:genPie},
+  {id:2,name:"Pecahan Setara",ic:"🟰",free:true,gen:genEquiv},
+  {id:3,name:"Banding Pecahan",ic:"⚖️",free:false,gen:genCompare},
+  {id:4,name:"Perpuluhan",ic:"🔢",free:false,gen:genDec},
+  {id:5,name:"Peratus",ic:"💯",free:false,gen:genPct},
+  {id:6,name:"Tambah & Tolak",ic:"➕",free:false,gen:genAdd}
+]});
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sains Seronok</title>
+<link rel="stylesheet" href="../mb.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script src="../mbquiz.js"></script>
+<script>
+var BADAN=[
+ ["Organ apa yang mengepam darah ke seluruh badan?","Jantung","Paru-paru","Perut","Jantung mengepam darah."],
+ ["Organ apa yang kita guna untuk bernafas?","Paru-paru","Jantung","Buah pinggang","Paru-paru membantu kita bernafas."],
+ ["Organ apa yang mencerna makanan?","Perut","Otak","Jantung","Perut mencerna makanan."],
+ ["Organ apa yang mengawal fikiran dan pergerakan badan?","Otak","Jantung","Hati","Otak mengawal badan kita."],
+ ["Organ apa yang menapis darah dan menghasilkan air kencing?","Buah pinggang","Paru-paru","Usus","Buah pinggang menapis darah."],
+ ["Penyerapan nutrien daripada makanan berlaku di mana?","Usus kecil","Esofagus","Mulut","Nutrien diserap di usus kecil."],
+ ["Apakah fungsi tulang?","Menyokong badan dan melindungi organ","Mencerna makanan","Menapis darah","Tulang menyokong dan melindungi badan."],
+ ["Deria apa yang digunakan oleh lidah?","Rasa","Bau","Dengar","Lidah ialah deria rasa."],
+ ["Apakah fungsi gigi kacip?","Memotong makanan","Mengisar makanan","Mengoyak daging","Gigi kacip memotong makanan."],
+ ["Gigi apa yang mengoyak makanan?","Gigi taring","Gigi kacip","Gigi geraham","Gigi taring mengoyak makanan."]];
+var HAIWAN=[
+ ["Harimau makan daging sahaja. Ia ialah...","Karnivor","Herbivor","Omnivor","Harimau ialah karnivor."],
+ ["Lembu makan rumput sahaja. Ia ialah...","Herbivor","Karnivor","Omnivor","Lembu ialah herbivor."],
+ ["Ayam makan bijirin dan serangga. Ia ialah...","Omnivor","Herbivor","Karnivor","Ayam ialah omnivor."],
+ ["Singa ialah haiwan...","Karnivor","Herbivor","Omnivor","Singa ialah karnivor."],
+ ["Kambing ialah haiwan...","Herbivor","Karnivor","Omnivor","Kambing ialah herbivor."],
+ ["Beruang makan ikan dan buah. Ia ialah...","Omnivor","Karnivor","Herbivor","Beruang ialah omnivor."],
+ ["Gajah ialah haiwan...","Herbivor","Karnivor","Omnivor","Gajah ialah herbivor."],
+ ["Burung hantu makan tikus. Ia ialah...","Karnivor","Herbivor","Omnivor","Burung hantu ialah karnivor."],
+ ["Dalam rantai makanan, siapa pengeluar makanan?","Tumbuhan hijau","Singa","Katak","Tumbuhan hijau menghasilkan makanan melalui fotosintesis."],
+ ["Rantai makanan bermula dengan...","Matahari dan tumbuhan","Karnivor","Pengurai","Tenaga datang daripada Matahari."]];
+var ELEK=[
+ ["Yang manakah konduktor elektrik?","Besi","Getah","Kayu","Besi ialah konduktor."],
+ ["Yang manakah penebat elektrik?","Getah","Tembaga","Aluminium","Getah ialah penebat."],
+ ["Kenapa wayar dibalut plastik?","Supaya selamat daripada kejutan elektrik","Supaya cantik","Supaya ringan","Plastik ialah penebat yang melindungi kita."],
+ ["Selamat atau bahaya: menyentuh palam dengan tangan basah?","Bahaya","Selamat","Tiada kesan","Air mengalirkan elektrik. Bahaya!"],
+ ["Selamat atau bahaya: mencucuk benda logam ke soket?","Bahaya","Selamat","Tiada kesan","Jangan cucuk apa-apa ke soket."],
+ ["Selamat atau bahaya: mencabut palam dengan memegang palam, bukan wayar?","Selamat","Bahaya","Tiada kesan","Pegang palam, bukan wayar."],
+ ["Apakah yang perlu ada supaya mentol menyala?","Litar lengkap","Litar terbuka","Tiada bateri","Litar mesti lengkap."],
+ ["Apakah fungsi suis?","Membuka dan menutup litar","Menyimpan tenaga","Menghasilkan cahaya","Suis membuka dan menutup litar."],
+ ["Sumber tenaga elektrik yang boleh dibawa ke mana-mana ialah...","Bateri","Soket dinding","Penjana kuasa stesen","Bateri boleh dibawa."],
+ ["Apakah yang perlu dilakukan jika ternampak wayar terkopek?","Beritahu orang dewasa","Pegang dan baiki sendiri","Abaikan","Beritahu orang dewasa dengan segera."]];
+var HABA=[
+ ["Apabila ais dipanaskan ia menjadi air. Ini dipanggil...","Peleburan","Pembekuan","Kondensasi","Pepejal menjadi cecair ialah peleburan."],
+ ["Air menjadi ais ialah...","Pembekuan","Peleburan","Pengewapan","Cecair menjadi pepejal ialah pembekuan."],
+ ["Air menjadi wap ialah...","Pengewapan","Pembekuan","Kondensasi","Cecair menjadi gas ialah pengewapan."],
+ ["Titisan air di luar gelas air sejuk berlaku kerana...","Kondensasi","Peleburan","Pembekuan","Wap air menyejuk menjadi air. Itu kondensasi."],
+ ["Yang manakah konduktor haba yang baik?","Logam","Kayu","Polistirena","Logam menyalurkan haba dengan baik."],
+ ["Mengapa pemegang periuk dibuat daripada plastik atau kayu?","Penebat haba, tidak panas","Cantik","Murah","Ia penebat haba."],
+ ["Apakah yang menyebabkan besi berkarat?","Oksigen dan air","Cahaya sahaja","Angin sahaja","Karat berlaku bila ada oksigen dan air."],
+ ["Cara mengelakkan besi berkarat ialah...","Mengecat atau menyapu minyak","Merendam dalam air","Membiarkan di hujan","Cat menghalang air dan oksigen."],
+ ["Alat untuk mengukur suhu ialah...","Termometer","Pembaris","Jam","Termometer mengukur suhu."],
+ ["Haba bergerak dari objek yang...","Panas ke sejuk","Sejuk ke panas","Sama sahaja","Haba mengalir dari panas ke sejuk."]];
+var ALAM=[
+ ["Bumi mengelilingi...","Matahari","Bulan","Marikh","Bumi mengelilingi Matahari."],
+ ["Siang dan malam berlaku kerana...","Bumi berputar pada paksinya","Bumi mengelilingi Matahari","Bulan bergerak","Putaran Bumi menyebabkan siang dan malam."],
+ ["Planet terdekat dengan Matahari ialah...","Utarid","Zuhrah","Marikh","Utarid paling dekat."],
+ ["Planet terbesar dalam sistem suria ialah...","Musytari","Bumi","Zuhal","Musytari paling besar."],
+ ["Planet yang dipanggil Planet Merah ialah...","Marikh","Zuhrah","Utarid","Marikh ialah Planet Merah."],
+ ["Bulan memantulkan cahaya daripada...","Matahari","Bumi","Bintang lain","Bulan memantulkan cahaya Matahari."],
+ ["Berapa lama Bumi mengelilingi Matahari?","Satu tahun","Satu hari","Satu bulan","Satu tahun."],
+ ["Planet yang mempunyai cincin yang jelas ialah...","Zuhal","Bumi","Marikh","Zuhal ada cincin."],
+ ["Bintang yang paling dekat dengan Bumi ialah...","Matahari","Bulan","Zuhrah","Matahari ialah bintang."],
+ ["Gerhana bulan berlaku apabila...","Bumi di antara Matahari dan Bulan","Bulan di antara Bumi dan Matahari","Matahari hilang","Bayang Bumi menutupi Bulan."]];
+var MESIN=[
+ ["Tuas, takal dan skru ialah...","Mesin ringkas","Alat elektrik","Haiwan","Mesin ringkas memudahkan kerja."],
+ ["Jungkat-jungkit ialah contoh...","Tuas","Takal","Skru","Jungkat-jungkit ialah tuas."],
+ ["Tiang bendera menggunakan...","Takal","Tuas","Skru","Takal menarik bendera ke atas."],
+ ["Satah condong membantu kita...","Menaikkan barang dengan usaha lebih kecil","Menurunkan suhu","Menyalakan lampu","Satah condong memudahkan menaikkan barang."],
+ ["Tin dibuka dengan penebuk tin. Ia ialah...","Tuas","Takal","Roda","Penebuk tin ialah tuas."],
+ ["Pembuka botol ialah contoh...","Tuas","Skru","Takal","Pembuka botol ialah tuas."],
+ ["Jirim wujud dalam tiga keadaan. Yang manakah BUKAN keadaan jirim?","Cahaya","Pepejal","Gas","Cahaya bukan jirim."],
+ ["Gas boleh...","Mengisi seluruh ruang","Kekal bentuk tetap","Tidak boleh dimampatkan","Gas mengisi seluruh ruang."],
+ ["Cecair mengambil bentuk...","Bekas","Bulat sahaja","Segi empat","Cecair ikut bentuk bekas."],
+ ["Apakah yang dimaksudkan dengan jisim?","Banyaknya bahan dalam objek","Ketinggian","Warna","Jisim ialah banyaknya bahan."]];
+var g1=mbMCQ(BADAN), g2=mbMCQ(HAIWAN), g3=mbMCQ(ELEK), g4=mbMCQ(HABA), g5=mbMCQ(ALAM), g6=mbMCQ(MESIN);
+mbQuizGame({id:"sains",title:"Sains Seronok",emoji:"🔬",key:"jsn_stars",bg:"#e7f5ff",sub:"Sains Tahun 4-6",levels:[
+  {id:1,name:"Badan Manusia",ic:"🫀",free:true,gen:g1},
+  {id:2,name:"Rantai Makanan",ic:"🦁",free:true,gen:g2},
+  {id:3,name:"Elektrik",ic:"💡",free:true,gen:g3},
+  {id:4,name:"Haba & Karat",ic:"🔥",free:false,gen:g4},
+  {id:5,name:"Bumi & Angkasa",ic:"🪐",free:false,gen:g5},
+  {id:6,name:"Jirim & Mesin",ic:"⚙️",free:false,gen:g6}
+]});
+</script>
+</body>
+</html>

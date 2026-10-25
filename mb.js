@@ -1,6 +1,6 @@
 // ====== MainBelajar: fungsi kongsi untuk semua game ======
 // Kod buka: satu kod bundle buka semua, atau kod satu game sahaja.
-var MB_CODES = {"MAINBELAJAR36":"all","JOMKIRA12":"kira","JOMSIFIR12":"sifir","JOMBACA12":"baca","LUKIS12":"lukis","PUZZLE12":"puzzle"};
+var MB_CODES = {"MAINBELAJAR36":"all","JOMKIRA12":"kira","JOMSIFIR12":"sifir","JOMBACA12":"baca","LUKIS12":"lukis","PUZZLE12":"puzzle","JOMPECAHAN12":"pecahan","DUIT12":"duit","BAHASA12":"bahasa","SAINS12":"sains","WORDS12":"words"};
 var MB_BUY_ONE = "";   // link bayar RM12 (satu game)
 var MB_BUY_ALL = "";   // link bayar RM36 (bundle 5 game)
 var MB_VERIFY_URL = "";  // bila diisi: kod disemak di server (kod unik dihantar ke emel pembeli). Kod statik di atas jadi kod ujian sahaja.
@@ -31,28 +31,35 @@ function nw(n){
 }
 function speakable(s){
   return String(s).replace(/<[^>]*>/g," ")
+    .replace(/RM\s?(\d+)\.(\d{2})/g,function(m,a,b){ return " "+nw(+a)+" ringgit "+(b!=="00"?nw(+b)+" sen ":""); })
+    .replace(/RM\s?(\d+)/g,function(m,a){ return " "+nw(+a)+" ringgit "; })
+    .replace(/(\d+)\.(\d+)/g,function(m,a,b){ return " "+nw(+a)+" perpuluhan "+b.split("").map(function(c){ return NW[+c]; }).join(" ")+" "; })
     .replace(/\d+/g,function(m){ return " "+nw(+m)+" "; })
-    .replace(/×/g," kali ").replace(/\+/g," tambah ").replace(/−/g," tolak ")
+    .replace(/%/g," peratus ").replace(/×/g," kali ").replace(/÷/g," bahagi ").replace(/\+/g," tambah ").replace(/−/g," tolak ")
     .replace(/=/g," sama dengan ").replace(/→/g,", ").replace(/❓/g," berapa ")
     .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,"");
 }
 var bt=null;
 function bubble(t){ var b=document.getElementById("bub"); if(!b) return; b.textContent="🦉 "+t; b.classList.remove("hide"); clearTimeout(bt); bt=setTimeout(function(){ b.classList.add("hide"); },3000); }
-var spkTimer=null;
+var spkTimer=null, VOICE_EN=null;
+function pickVoiceEn(){ try{ var vs=speechSynthesis.getVoices(); VOICE_EN=vs.filter(function(v){return /^en[-_](GB|AU|US|IN|MY)/i.test(v.lang);})[0]||vs.filter(function(v){return /^en/i.test(v.lang);})[0]||null; }catch(e){} }
+try{ var _ovc=speechSynthesis.onvoiceschanged; speechSynthesis.onvoiceschanged=function(){ pickVoice(); pickVoiceEn(); }; pickVoiceEn(); }catch(e){}
 function say(text,cb,o){
   o=o||{}; bubble(String(o.show||text).replace(/<[^>]*>/g," ").replace(/\s+/g," "));
   var done=false; function fin(){ if(done) return; done=true; clearTimeout(spkTimer); if(cb) cb(); }
   if(!voiceOn||!window.speechSynthesis){ clearTimeout(spkTimer); spkTimer=setTimeout(fin,o.gap||1100); return; }
   try{
     speechSynthesis.cancel();
-    var t=speakable(text), u=new SpeechSynthesisUtterance(t);
-    u.lang=VOICE?VOICE.lang:"ms-MY"; if(VOICE) u.voice=VOICE;
+    var t=o.raw?String(text):speakable(text), u=new SpeechSynthesisUtterance(t);
+    if(o.lang==="en"){ u.lang=VOICE_EN?VOICE_EN.lang:"en-GB"; if(VOICE_EN) u.voice=VOICE_EN; }
+    else { u.lang=VOICE?VOICE.lang:"ms-MY"; if(VOICE) u.voice=VOICE; }
     u.rate=o.rate||0.9; u.pitch=o.pitch||1.35; u.volume=1;
     u.onend=fin; u.onerror=fin;
     speechSynthesis.speak(u);
     clearTimeout(spkTimer); spkTimer=setTimeout(fin,2500+t.length*110);
   }catch(e){ fin(); }
 }
+function sayEn(text,cb,o){ o=o||{}; o.lang="en"; o.raw=true; o.rate=o.rate||0.8; say(text,cb,o); }
 function toggleVoice(){ voiceOn=!voiceOn; save("mb_voice",voiceOn); try{ speechSynthesis.cancel(); }catch(e){} var v=document.getElementById("vb"); if(v) v.textContent=voiceOn?"🔊":"🔇"; if(voiceOn) say("Hai kawan! Jom main!"); }
 var OKS=["Pandai!","Hebat!","Bagus!","Betul! Power!","Wah, cerdik!","Terbaik!","Yeay! Betul!"];
 var NOS=["Cuba lagi ya!","Hampir betul!","Jangan putus asa!","Tak apa, cuba lagi!"];

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Word Power</title>
+<link rel="stylesheet" href="../mb.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script src="../mbquiz.js"></script>
+<script>
+// [english, emoji, bahasa melayu]
+var V=[["apple","🍎","epal"],["book","📖","buku"],["cat","🐱","kucing"],["dog","🐶","anjing"],["fish","🐟","ikan"],["house","🏠","rumah"],["car","🚗","kereta"],["sun","☀️","matahari"],["moon","🌙","bulan"],["tree","🌳","pokok"],
+ ["flower","🌸","bunga"],["bird","🐦","burung"],["water","💧","air"],["chair","🪑","kerusi"],["clock","⏰","jam"],["shoe","👟","kasut"],["milk","🥛","susu"],["egg","🥚","telur"],["bread","🍞","roti"],["rain","🌧️","hujan"],
+ ["star","⭐","bintang"],["boat","⛵","bot"],["hand","✋","tangan"],["eye","👁️","mata"],["ball","⚽","bola"],["bag","🎒","beg"],["pen","🖊️","pen"],["rice","🍚","nasi"],["banana","🍌","pisang"],["cow","🐄","lembu"]];
+var vDeck=mbDeck(V);
+function en3(it,idx){ var set=[it[idx]],g=0; while(set.length<3&&g++<200){ var x=pick(V)[idx]; if(set.indexOf(x)<0) set.push(x); } return shuffle(set); }
+function genPic(){
+  var it=vDeck(), ch=en3(it,0);
+  return {prompt:"What is this?", vis:it[1], vf:80, lang:"en", say:"What is this?", show:"What is this?", ch:ch, ans:ch.indexOf(it[0]), small:true, one:true, ok:it[0]+" bermaksud "+it[2], okEn:it[0]+". "+it[0]+"."};
+}
+function genMean(){
+  var it=vDeck(), ch=en3(it,2);
+  return {prompt:"Maksud perkataan ini?", vis:"<span class='wordbig'>"+it[0]+"</span>", lang:"en", say:it[0], show:it[0], ch:ch, ans:ch.indexOf(it[2]), small:true, one:true, ok:it[0]+" bermaksud "+it[2], okEn:it[0]+"."};
+}
+// ---- spelling (custom) ----
+var SP=V.filter(function(w){ return w[0].length<=6; }), spDeck=mbDeck(SP);
+function genSpell(qa,finish){
+  var it=spDeck(), w=it[0].toUpperCase(), pos=0, tried=false;
+  var letters=shuffle(w.split("").map(function(c,i){ return {c:c,id:i}; }));
+  qa.innerHTML='<div class="q"><div class="prompt" style="font-size:22px">Spell this word 🔊</div><div class="vis" style="font-size:80px">'+it[1]+'</div><div class="slots" id="sl"></div></div><div class="chips" id="tl"></div>';
+  var sl=document.getElementById("sl"), tl=document.getElementById("tl");
+  w.split("").forEach(function(){ sl.innerHTML+='<div class="slot"></div>'; });
+  var slots=sl.querySelectorAll(".slot");
+  document.querySelector(".q").onclick=function(){ sayEn(it[0]); };
+  setTimeout(function(){ sayEn(it[0]); },200);
+  letters.forEach(function(L){
+    var b=document.createElement("button"); b.className="ch"; b.style.cssText="min-height:60px;width:60px;font-size:30px"; b.textContent=L.c;
+    b.onclick=function(){
+      if(b.disabled) return;
+      if(L.c===w.charAt(pos)){
+        sndOk(); slots[pos].textContent=L.c; slots[pos].classList.add("on"); b.disabled=true; b.style.opacity=.3; pos++;
+        if(pos===w.length){ say(pick(OKS),function(){ sayEn(it[0]); }); finish(!tried); }
+      } else { tried=true; sndNo(); b.classList.add("no"); setTimeout(function(){ b.classList.remove("no"); },450); }
+    };
+    tl.appendChild(b);
+  });
+}
+// ---- grammar ----
+var GR=[["She ___ to school every day.","goes","go","going","She goes to school every day."],["They ___ playing football now.","are","is","am","They are playing football now."],["I ___ a student.","am","is","are","I am a student."],["He ___ a book yesterday.","read","reads","reading","He read a book yesterday."],
+ ["We ___ happy today.","are","is","am","We are happy today."],["There ___ two cats on the sofa.","are","is","am","There are two cats on the sofa."],["My brother ___ football every Sunday.","plays","play","playing","My brother plays football every Sunday."],["She is ___ than her sister.","taller","tall","tallest","She is taller than her sister."],
+ ["I have ___ apple.","an","a","the","I have an apple."],["Ali ___ not like carrots.","does","do","is","Ali does not like carrots."],["The sun ___ in the east.","rises","rise","rising","The sun rises in the east."],["She ___ her homework last night.","did","do","does","She did her homework last night."]];
+var grGen=mbMCQ(GR);
+function genGram(){ var q=grGen(); q.lang="en"; q.vf=24; q.vis="<span style='font-size:23px;line-height:1.4;display:block'>"+q.prompt.replace("___","<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>")+"</span>"; q.say=q.prompt.replace("___","blank"); q.prompt="Choose the correct word"; q.okEn=q.ok; q.ok=""; return q; }
+// ---- opposites ----
+var OP=[["big","small"],["hot","cold"],["up","down"],["happy","sad"],["fast","slow"],["day","night"],["old","new"],["hard","soft"],["open","close"],["clean","dirty"],["tall","short"],["full","empty"]];
+var opDeck=mbDeck(OP), opAll=OP.map(function(x){ return x[1]; }).concat(OP.map(function(x){ return x[0]; }));
+function genOpp(){
+  var it=opDeck(), ch=[it[1]],g=0; while(ch.length<3&&g++<200){ var x=pick(opAll); if(x!==it[0]&&ch.indexOf(x)<0) ch.push(x); } ch=shuffle(ch);
+  return {prompt:"Opposite of...", vis:"<span class='wordbig'>"+it[0]+"</span>", lang:"en", say:"What is the opposite of "+it[0]+"?", show:"Opposite of "+it[0], ch:ch, ans:ch.indexOf(it[1]), small:true, one:true, ok:it[1], okEn:it[0]+" and "+it[1]+" are opposites."};
+}
+// ---- past tense ----
+var PT=[["go","went","goed","goes"],["eat","ate","eated","eats"],["see","saw","seed","sees"],["run","ran","runned","runs"],["buy","bought","buyed","buys"],["write","wrote","writed","writes"],["take","took","taked","takes"],["come","came","comed","comes"],["give","gave","gived","gives"],["drink","drank","drinked","drinks"],["sit","sat","sitted","sits"],["make","made","maked","makes"]];
+var ptGen=mbMCQ(PT.map(function(x){ return ["Past tense of '"+x[0]+"'?",x[1],x[2],x[3],x[0]+" - "+x[1]]; }));
+function genPast(){ var q=ptGen(); q.lang="en"; q.okEn=q.ok; q.ok=""; q.say=q.prompt; return q; }
+mbQuizGame({id:"words",title:"Word Power",emoji:"🔤",key:"jw_stars",bg:"#f1f3ff",sub:"English asas (Tahun 4-6)",levels:[
+  {id:1,name:"Picture Words",ic:"🖼️",free:true,gen:genPic},
+  {id:2,name:"Maksud BM",ic:"🔁",free:true,gen:genMean},
+  {id:3,name:"Spelling",ic:"🔡",free:true,custom:genSpell},
+  {id:4,name:"Grammar",ic:"✍️",free:false,gen:genGram},
+  {id:5,name:"Opposites",ic:"↔️",free:false,gen:genOpp},
+  {id:6,name:"Past Tense",ic:"⏪",free:false,gen:genPast}
+]});
+</script>
+</body>
+</html>

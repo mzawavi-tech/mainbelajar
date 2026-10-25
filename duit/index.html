@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Duit Pandai</title>
+<link rel="stylesheet" href="../mb.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="bub" class="bub hide"></div>
+<script src="../mb.js"></script>
+<script src="../mbquiz.js"></script>
+<script>
+function rm(c){ if(c<100) return c+" sen"; var r=Math.floor(c/100), s=c%100; return s?"RM"+r+"."+(s<10?"0"+s:s):"RM"+r; }
+function money3(ans,steps){
+  var set=[ans],g=0; while(set.length<3&&g++<200){ var c=ans+pick(steps)*pick([1,-1]); if(c>0&&set.indexOf(c)<0) set.push(c); }
+  var f=1; while(set.length<3){ if(set.indexOf(ans+f*5)<0) set.push(ans+f*5); f++; }
+  return shuffle(set);
+}
+var NOTE={100:["RM1","#4dabf7"],500:["RM5","#51cf66"],1000:["RM10","#fa5252"],2000:["RM20","#ff922b"],5000:["RM50","#20c997"],10000:["RM100","#9775fa"]};
+function chip(v){ if(NOTE[v]) return '<span class="rmn" style="background:'+NOTE[v][1]+'">'+NOTE[v][0]+'</span>'; return '<span class="rmc">'+v+'sen</span>'; }
+
+function genCount(){
+  var den=[100,500,1000,2000,5000,5,10,20,50], n=rnd(3,6), items=[], tot=0;
+  for(var i=0;i<n;i++){ var v=pick(den); items.push(v); tot+=v; }
+  var set=money3(tot,[5,10,20,50,100,500]);
+  return {prompt:"Berapa jumlah wang ini?", vis:items.map(chip).join(""), vf:16, say:"Berapa jumlah wang ini?", ch:set.map(rm), ans:set.indexOf(tot), ok:"Jumlahnya "+rm(tot)};
+}
+function genChange(){
+  var pay=pick([500,1000,2000,5000]), price, lim=pay-50;
+  price=Math.round(rnd(150,lim)/5)*5; if(price>=pay) price=pay-35;
+  var ch=pay-price, set=money3(ch,[5,10,20,50,100]);
+  return {prompt:"Berapa baki duit?", vis:"Harga "+rm(price)+"<br>Bayar "+rm(pay), vf:28, say:"Harga "+rm(price)+". Bayar "+rm(pay)+". Berapa baki?", ch:set.map(rm), ans:set.indexOf(ch), ok:"Bakinya "+rm(ch)};
+}
+function genDisc(){
+  var price=pick([40,50,60,80,100,120,160,200])*100, p=pick([10,20,25,50]), off=price*p/100, fin=price-off;
+  var set=money3(fin,[100,200,500,1000,2000]);
+  return {prompt:"Harga selepas diskaun?", vis:"Harga asal "+rm(price)+"<br>Diskaun "+p+"%", vf:26, say:"Harga asal "+rm(price)+". Diskaun "+p+" peratus. Berapa harga selepas diskaun?", ch:set.map(rm), ans:set.indexOf(fin), ok:"Diskaun "+rm(off)+". Bayar "+rm(fin)};
+}
+var NEED=[["Beras","p"],["Ubat bila sakit","p"],["Buku sekolah","p"],["Baju sekolah","p"],["Air bersih","p"],["Pensel dan pen","p"],["Kasut sekolah","p"],["Makanan yang sihat","p"],
+  ["Mainan baharu setiap bulan","m"],["Permainan video terbaru","m"],["Aiskrim setiap hari","m"],["Kasut berjenama yang mahal","m"],["Telefon model terbaharu","m"],["Kad koleksi baharu","m"],["Air manis botol besar","m"],["Beg baharu, padahal beg lama masih elok","m"]];
+var needDeck=mbDeck(NEED);
+function genNeed(){
+  var it=needDeck(), need=it[1]==="p";
+  return {prompt:"Perlu atau Mahu?", vis:"<span style='font-size:30px'>"+it[0]+"</span>", say:"Adakah ini keperluan atau kehendak? "+it[0], show:"Perlu atau mahu? "+it[0], ch:["✅ Perlu","🎁 Mahu"], ans:need?0:1, two:true, small:true, ok:need?it[0]+" ialah keperluan. Kita perlu beli dulu.":it[0]+" ialah kehendak. Boleh tunggu dan simpan duit dahulu."};
+}
+function genSave(){
+  if(Math.random()<.5){
+    var x=pick([2,3,5,10]), w=pick([4,5,6,8,10,12]), ans=x*w, set=money3(ans*100,[x*100,200,500,1000]);
+    return {prompt:"Simpan setiap minggu", vis:"RM"+x+" seminggu<br>"+w+" minggu = ?", vf:28, say:"Kamu simpan "+x+" ringgit seminggu. Berapa duit selepas "+w+" minggu?", ch:set.map(rm), ans:set.indexOf(ans*100), ok:"Selepas "+w+" minggu, kamu ada "+rm(ans*100)};
+  }
+  var s=pick([5,10]), w2=rnd(3,9), h=pick([20,30,40,45,50]), t=h+s*w2, set2=shuffle(uniq3(w2,function(){ return Math.max(1,w2+pick([-2,-1,1,2,3])); }));
+  return {prompt:"Berapa minggu lagi?", vis:"Mahu beli RM"+t+"<br>Ada RM"+h+", simpan RM"+s+" seminggu", vf:24, say:"Mahu beli barang harga "+t+" ringgit. Sudah ada "+h+" ringgit. Simpan "+s+" ringgit seminggu. Berapa minggu lagi?", ch:set2.map(function(x){ return x+" minggu"; }), ans:set2.indexOf(w2), ok:"Perlu "+w2+" minggu lagi"};
+}
+var SCAM=[
+ ["Mesej: Tahniah! Kamu menang RM5000. Klik pautan ini dan masukkan nombor kad bank.",1,"Hadiah yang kamu tak sertai ialah penipuan."],
+ ["Orang yang tidak dikenali minta kod OTP daripada telefon kamu.",1,"Kod OTP rahsia. Jangan kongsi dengan sesiapa."],
+ ["Iklan: Bayar RM100 sekarang, dapat RM1000 esok!",1,"Janji untung cepat ialah tanda penipuan."],
+ ["Kawan dalam game minta kata laluan akaun kamu untuk beri item percuma.",1,"Jangan beri kata laluan kepada sesiapa."],
+ ["Mesej: Akaun bank anda akan ditutup! Klik pautan sekarang!",1,"Mesej yang mendesak dan ada pautan ialah scam."],
+ ["Panggilan: Kami polis. Pindahkan duit kamu ke akaun ini untuk siasatan.",1,"Polis tak minta kamu pindah duit. Tutup panggilan dan beritahu ibu bapa."],
+ ["Ibu bapa beri wang saku seminggu dan kamu catat belanja.",0,"Mencatat belanja ialah tabiat baik."],
+ ["Kedai beri resit selepas kamu bayar.",0,"Resit ialah bukti bayaran. Simpan baik-baik."],
+ ["Kamu tanya ibu bapa sebelum beli barang dalam talian.",0,"Betul! Sentiasa tanya orang dewasa dahulu."],
+ ["Kamu simpan duit raya dalam tabung atau akaun bank bersama ibu bapa.",0,"Menyimpan itu bijak."],
+ ["Kamu tak kongsi OTP dengan sesiapa, walaupun mereka mengaku dari bank.",0,"Tindakan yang betul dan selamat."],
+ ["Kamu tunjuk mesej pelik yang minta duit kepada ibu bapa.",0,"Bagus! Berbincang dengan orang dewasa ialah langkah selamat."]];
+var scamDeck=mbDeck(SCAM);
+function genScam(){
+  var it=scamDeck(), sc=it[1]===1;
+  return {prompt:"Scam atau Selamat?", vis:"<span style='font-size:21px;line-height:1.35;display:block'>"+it[0]+"</span>", vf:20, say:"Scam atau selamat? "+it[0], show:"Scam atau selamat?", ch:["🚨 Scam","✅ Selamat"], ans:sc?0:1, two:true, small:true, ok:(sc?"Scam! ":"Selamat! ")+it[2], okShow:it[2]};
+}
+function W(f){ return function(){ var q=f(); if(!q.two){ q.small=true; q.one=true; } return q; }; }
+mbQuizGame({id:"duit",title:"Duit Pandai",emoji:"💰",key:"jd_stars",bg:"#e6fcf5",sub:"Belajar urus wang dengan bijak (Tahun 4-6)",levels:[
+  {id:1,name:"Kira Wang",ic:"💵",free:true,gen:W(genCount)},
+  {id:2,name:"Kira Baki",ic:"🧾",free:true,gen:W(genChange)},
+  {id:3,name:"Diskaun",ic:"🏷️",free:true,gen:W(genDisc)},
+  {id:4,name:"Perlu atau Mahu",ic:"🛒",free:false,gen:genNeed},
+  {id:5,name:"Simpan Duit",ic:"🐷",free:false,gen:W(genSave)},
+  {id:6,name:"Awas Scam!",ic:"🚨",free:false,gen:genScam}
+]});
+</script>
+</body>
+</html>
