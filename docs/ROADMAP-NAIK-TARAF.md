@@ -1,3 +1,5 @@
+> **Kemas kini 2026-11-22:** objektif teras ditukar kepada Projek 3 Bulan 3M. Lihat `docs/PROJEK-3M.md`. Dokumen ini kekal sebagai kajian pesaing dan jurang.
+
 # MainBelajar V1.0 — Roadmap Naik Taraf vs Pesaing
 
 Rekod: 22 November 2026. Versi penuh dengan carta: dokumen "MainBelajar V1.0 — Roadmap Naik Taraf vs Pesaing" dalam Claude.

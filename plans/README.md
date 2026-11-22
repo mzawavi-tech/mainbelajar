@@ -20,3 +20,6 @@ Folder ini ialah "peti surat" antara ChatGPT (perancang, storyboard) dan Claude 
 
 ## Rujukan
 Roadmap penuh: `docs/ROADMAP-NAIK-TARAF.md`.
+
+## Projek teras semasa
+Projek 3 Bulan 3M: lihat `docs/PROJEK-3M.md` dan `plans/projek-3m/BRIEF.md`.
