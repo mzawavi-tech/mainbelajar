@@ -25,6 +25,9 @@ Kanak-kanak 4-7 tahun yang mengikuti jadual game 12 minggu mencapai sasaran memb
 - [ ] Semakan ada kriteria lulus yang boleh diukur
 - [ ] Dashboard paparkan tugas hari ini, status, skor, kemajuan 12 minggu
 
+## 4b. Watak dan gaya visual
+Lihat `plans/projek-3m/WATAK.md`: Awang, Melur dan rakan dalam baju sekolah pra, gaya sama dengan aset sedia ada.
+
 ## 5. Risiko
 - Sasaran 3M perlu selari dengan standard prasekolah sebenar; jangan reka.
 - Jangan dakwa jaminan hasil dalam salinan jualan.
