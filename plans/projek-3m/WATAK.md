@@ -10,7 +10,7 @@ Awang dan Melur kekal sebagai watak utama, tetapi dalam **pakaian sekolah pra** 
 - Daftar pose dan mulut: `uji/watak/gaya.js` (gambar badan lutsinar + jalur 4 mulut + kedudukan mulut dalam peratus).
 
 ## Pakaian sekolah pra (reka asli)
-- Palet disyorkan: biru langit + putih + aksen jingga. Elak hijau-putih-kuning kerana terlalu menyerupai produk orang lain.
+- Palet: pilihan Awie. Pilihan A hijau + putih + kuning, pilihan B biru langit + putih + jingga. Warna uniform tadika bukan milik sesiapa, jadi dua-dua dibenarkan. Yang dielak ialah reka bentuk patung orang lain (muka mata hitam bulat, tudung bulat tebal, gaya gantungan kunci kait), bukan palet.
 - Awang: baju kemeja pendek + seluar pendek/panjang, beg sekolah kecil.
 - Melur: baju kurung ringkas/pinafore + tudung putih, beg sekolah kecil.
 - Satu lencana kecil "MainBelajar" di dada.
